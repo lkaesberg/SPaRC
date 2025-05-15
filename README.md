@@ -2,7 +2,7 @@
   <img src="logo.png" alt="SPaRC Logo" width="128"/>
 </p>
 
-# SPaRC Dataset Visualizer
+# SPaRC Dataset
 
 **SPaRC: A Spatial Pathfinding and Reasoning Challenge**
 
