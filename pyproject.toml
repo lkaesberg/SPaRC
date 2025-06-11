@@ -1,6 +1,6 @@
 [project]
 name = "sparc-puzzle"
-version = "0.2.0"
+version = "0.0.0"
 description = ""
 authors = [
     {name = "larskaesberg",email = "larskaesberg@gmail.com"}

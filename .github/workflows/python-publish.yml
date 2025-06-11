@@ -25,9 +25,21 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install build
+      - name: Extract version from tag
+        run: |
+          # Extract version from git tag (format: v0.0.0 or 0.0.0)
+          PACKAGE_VERSION=$(echo $GITHUB_REF | sed 's/refs\/tags\///' | sed 's/^v//')
+          echo "PACKAGE_VERSION=$PACKAGE_VERSION" >> $GITHUB_ENV
+          echo "Extracted version: $PACKAGE_VERSION"
+      - name: Update version in pyproject.toml
+        run: |
+          # Update the version field in pyproject.toml
+          sed -i "s/^version = \".*\"/version = \"$PACKAGE_VERSION\"/" pyproject.toml
+          echo "Updated pyproject.toml with version $PACKAGE_VERSION"
+          # Verify the change
+          grep "^version = " pyproject.toml
       - name: Build package
         run: |
-          export PACKAGE_VERSION=$(echo $GITHUB_REF | sed 's/refs\/tags\///')
           python -m build
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
