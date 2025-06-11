@@ -1,0 +1,6 @@
+sparc/__pycache__/
+.DS_Store
+.env
+.venv/
+.vscode/
+sparc_results.json
