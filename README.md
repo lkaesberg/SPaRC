@@ -82,7 +82,17 @@ dataset = load_dataset("lkaesberg/SPaRC", "all", split="test")
 puzzle = dataset[0]
 
 # Generate prompt for your model
-puzzle_prompt = generate_prompt(puzzle)
+puzzle_prompt = [
+                  {
+                    "role": "system",
+                    "content": "You are an expert at solving puzzles games.",
+                  },
+                  {
+                    "role": "user", 
+                    "content": generate_prompt(puzzle)
+                  }
+                ]
+
 
 # Your model generates a response
 model_response = "... model response with path coordinates ..."

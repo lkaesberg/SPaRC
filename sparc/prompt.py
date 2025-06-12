@@ -20,7 +20,7 @@ def generate_prompt(puzzle_data: Dict) -> str:
         polyshapes_str = "POLYSHAPES DEFINITIONS:\n"
         polyshapes_json = json.loads(puzzle_data["polyshapes"])
         for shape_id, shape_def in polyshapes_json.items():
-            polyshapes_str += f"Shape {shape_id}:\n{"\n".join(map(str, shape_def))}\n\n"
+            polyshapes_str += f"Shape {shape_id}:\n{'\n'.join(map(str, shape_def))}\n\n"
     return f"""
 ## Objective
 You are a specialized AI proficient in spatial reasoning and solving puzzles from the game 'The Witness'. Your goal is to find a valid path (a continuous line) from the specified Start Node to the End Node on the provided grid, adhering to all puzzle rules.
