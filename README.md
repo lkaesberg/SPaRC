@@ -121,7 +121,7 @@ sparc --api-key "your-key" [OPTIONS]
 | `--api-key` | **Required** | OpenAI API key or your model's API key |
 | `--base-url` | `https://api.openai.com/v1` | API endpoint URL |
 | `--model` | `gpt-4` | Model name to evaluate |
-| `--temperature` | `0.7` | Generation temperature |
+| `--temperature` | `1.0` | Generation temperature |
 | `--batch-size` | `5` | Number of concurrent requests |
 | `--results-file` | `sparc_results.json` | File to save results |
 | `--fresh-start` | `False` | Ignore existing results and start over |

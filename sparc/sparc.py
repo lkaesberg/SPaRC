@@ -102,7 +102,7 @@ async def process_puzzle(client: AsyncOpenAI, puzzle_data: Dict, model: str, tem
                     },
                     {"role": "user", "content": prompt(puzzle_data)},
                 ],
-                temperature=temperature,
+                temperature=1,
             )
             
             message = response.choices[0].message.content
@@ -285,8 +285,8 @@ def main() -> None:
     parser.add_argument(
         "--temperature", 
         type=float,
-        default=0.7,
-        help="Temperature for model generation (default: 0.7)"
+        default=1.0,
+        help="Temperature for model generation"
     )
     parser.add_argument(
         "--batch-size", 
