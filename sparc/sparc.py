@@ -14,7 +14,8 @@ from sparc.prompt import prompt
 from sparc.validation import extract_solution_path, validate_solution, analyze_path
 from sparc.tables import create_statistics_table, create_detailed_results_table
 from datasets import load_dataset
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, APIConnectionError, APITimeoutError
+import aiohttp
 
 console = Console()
 
@@ -85,52 +86,60 @@ def load_results(filename: str) -> tuple[List[Dict], Set[str]]:
 
 
 async def process_puzzle(client: AsyncOpenAI, puzzle_data: Dict, model: str, temperature: float, puzzle_index: int) -> Dict:
-    """Process a single puzzle asynchronously"""
+    """Process a single puzzle asynchronously with retry logic for connection errors"""
     start_time = time.time()
     puzzle_id = puzzle_data.get("id", f"idx_{puzzle_index}")
+    max_retries = 3
     
-    try:
-        response = await client.chat.completions.create(
-            model=model,
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are an expert at solving puzzles games.",
-                },
-                {"role": "user", "content": prompt(puzzle_data)},
-            ],
-            temperature=temperature,
-        )
+    for attempt in range(max_retries + 1):
+        try:
+            response = await client.chat.completions.create(
+                model=model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are an expert at solving puzzles games.",
+                    },
+                    {"role": "user", "content": prompt(puzzle_data)},
+                ],
+                temperature=temperature,
+            )
+            
+            message = response.choices[0].message.content
+            extracted_path = extract_solution_path(message, puzzle_data)
+            solved = validate_solution(extracted_path, puzzle_data)
+            analysis = analyze_path(extracted_path, puzzle_data)
+            
+            processing_time = time.time() - start_time
+            
+            return {
+                'puzzle_id': puzzle_id,
+                'puzzle_data': puzzle_data,
+                'extracted_path': extracted_path,
+                'solved': solved,
+                'analysis': analysis,
+                'processing_time': processing_time,
+                'message': message,
+                'error': None
+            }
+            
+        except (APIConnectionError, APITimeoutError, aiohttp.ClientError, asyncio.TimeoutError) as e:
+            if attempt < max_retries:
+                wait_time = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s
+                console.print(f"[yellow]⚠️  Connection error on puzzle {puzzle_id} (attempt {attempt + 1}/{max_retries + 1}): {str(e)}[/]")
+                console.print(f"[yellow]🔄 Retrying in {wait_time} seconds...[/]")
+                await asyncio.sleep(wait_time)
+                continue
+            else:
+                console.print(f"[red]❌ CRITICAL ERROR on puzzle {puzzle_id}: {str(e)}[/]")
+                console.print(f"[red]❌ Exiting without saving current batch to prevent data corruption[/]")
+                exit(1)
         
-        message = response.choices[0].message.content
-        extracted_path = extract_solution_path(message, puzzle_data)
-        solved = validate_solution(extracted_path, puzzle_data)
-        analysis = analyze_path(extracted_path, puzzle_data)
-        
-        processing_time = time.time() - start_time
-        
-        return {
-            'puzzle_id': puzzle_id,
-            'puzzle_data': puzzle_data,
-            'extracted_path': extracted_path,
-            'solved': solved,
-            'analysis': analysis,
-            'processing_time': processing_time,
-            'message': message,
-            'error': None
-        }
-        
-    except Exception as e:
-        processing_time = time.time() - start_time
-        return {
-            'puzzle_id': puzzle_id,
-            'puzzle_data': puzzle_data,
-            'extracted_path': None,
-            'solved': False,
-            'analysis': {'fully_valid_path': False},
-            'processing_time': processing_time,
-            'error': str(e)
-        }
+        except Exception as e:
+            # For non-connection errors, still exit to prevent data corruption
+            console.print(f"[red]❌ CRITICAL ERROR on puzzle {puzzle_id}: {str(e)}[/]")
+            console.print(f"[red]❌ Exiting without saving current batch to prevent data corruption[/]")
+            exit(1)
 
 
 async def process_batch(client: AsyncOpenAI, batch_puzzles: List[tuple], model: str, temperature: float, verbose: bool) -> List[Dict]:
