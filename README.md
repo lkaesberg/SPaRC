@@ -65,7 +65,7 @@ sparc --api-key "your-key" --base-url "http://localhost:8080/v1" --model "llama-
 sparc --api-key "your-key" --model "gpt-4"  # Automatically resumes
 
 # Fresh start (ignore previous results)
-sparc --api-key "your-key" --model "gpt-4" --fresh-start
+sparc --api-key "your-key" --model "gpt-4" --overwrite
 ```
 
 ### 2. Using the Validation API
@@ -74,7 +74,7 @@ Use SPaRC's validation functions in your own code:
 
 ```python
 from sparc.validation import extract_solution_path, validate_solution, analyze_path
-from sparc.prompt import prompt
+from sparc.prompt import generate_prompt
 from datasets import load_dataset
 
 # Load the dataset
@@ -82,7 +82,7 @@ dataset = load_dataset("lkaesberg/SPaRC", "all", split="test")
 puzzle = dataset[0]
 
 # Generate prompt for your model
-puzzle_prompt = prompt(puzzle)
+puzzle_prompt = generate_prompt(puzzle)
 
 # Your model generates a response
 model_response = "... model response with path coordinates ..."
@@ -124,7 +124,7 @@ sparc --api-key "your-key" [OPTIONS]
 | `--temperature` | `1.0` | Generation temperature |
 | `--batch-size` | `5` | Number of concurrent requests |
 | `--results-file` | `sparc_results.json` | File to save results |
-| `--fresh-start` | `False` | Ignore existing results and start over |
+| `--overwrite` | `False` | Ignore existing results and start over |
 | `--verbose` | `False` | Show detailed output for each puzzle |
 
 ### Examples
@@ -157,7 +157,7 @@ Validates if the extracted path matches any ground truth solution.
 #### `analyze_path(solution_path: List[Dict[str, int]], puzzle: Dict) -> Dict`
 Provides detailed analysis of path validity and rule compliance.
 
-#### `prompt(puzzle_data: Dict) -> str`
+#### `generate_prompt(puzzle_data: Dict) -> str`
 Generates the formatted prompt for a puzzle.
 
 ## Contributing

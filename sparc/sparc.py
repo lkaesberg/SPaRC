@@ -10,7 +10,7 @@ from rich.table import Table
 from rich.progress import Progress, TaskID, SpinnerColumn, TextColumn, BarColumn, TimeElapsedColumn, MofNCompleteColumn
 from rich.panel import Panel
 from rich import box
-from sparc.prompt import prompt
+from sparc.prompt import generate_prompt
 from sparc.validation import extract_solution_path, validate_solution, analyze_path
 from sparc.tables import create_statistics_table, create_detailed_results_table
 from datasets import load_dataset
@@ -100,7 +100,7 @@ async def process_puzzle(client: AsyncOpenAI, puzzle_data: Dict, model: str, tem
                         "role": "system",
                         "content": "You are an expert at solving puzzles games.",
                     },
-                    {"role": "user", "content": prompt(puzzle_data)},
+                    {"role": "user", "content": generate_prompt(puzzle_data)},
                 ],
                 temperature=1,
             )
@@ -300,7 +300,7 @@ def main() -> None:
         help="File to save/load intermediate results (default: sparc_results.json)"
     )
     parser.add_argument(
-        "--fresh-start", 
+        "--overwrite", 
         action="store_true",
         help="Ignore existing results file and start fresh"
     )
@@ -320,12 +320,12 @@ def main() -> None:
     
     total_puzzles = len(dataset)
     
-    # Load existing results unless fresh start is requested
+    # Load existing results unless overwrite is requested
     skip_processed = set()
-    if not args.fresh_start:
+    if not args.overwrite:
         _, skip_processed = load_results(args.results_file)
     elif os.path.exists(args.results_file):
-        console.print(f"[yellow]🗑️  Fresh start requested, ignoring existing {args.results_file}[/]")
+        console.print(f"[yellow]🗑️  Overwrite requested, ignoring existing {args.results_file}[/]")
     
     # Configuration info
     config_table = Table(box=box.SIMPLE)

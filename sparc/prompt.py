@@ -2,7 +2,7 @@ from typing import Dict
 import json
 
 
-def prompt(puzzle_data: Dict) -> str:
+def generate_prompt(puzzle_data: Dict) -> str:
     grid_size = puzzle_data.get("grid_size", {"width": 0, "height": 0})
     puzzle_array = puzzle_data.get("puzzle_array", [])
     grid_str = "\n".join(map(str, puzzle_array))
