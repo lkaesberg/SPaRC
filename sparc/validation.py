@@ -18,7 +18,7 @@ def extract_solution_path(
     solution_marker = "####"
     if solution_marker in solution_text:
         # Only process text after "####"
-        solution_part = solution_text.split(solution_marker, 1)[-1]
+        solution_part = solution_text.split(solution_marker)[-1]
     else:
         # If no solution marker, use the full text
         solution_part = solution_text
@@ -61,18 +61,22 @@ def extract_solution_path(
     return None
 
 
-def validate_solution(extracted_path: List[Dict[str, int]], puzzle_data: Dict) -> bool:
+def validate_solution(extracted_path: Optional[List[Dict[str, int]]], puzzle_data: Dict) -> bool:
     """Validate if the solution is valid by comparing with known solutions
 
     Args:
-        extracted_path: List of coordinate dicts
+        extracted_path: Optional list of coordinate dicts (can be None if no path extracted)
         puzzle_data: Dictionary containing puzzle data including solutions
 
     Returns:
-        Boolean indicating if the solution is valid
+        Boolean indicating if the solution is valid. Returns False if no valid path is provided.
     """
+    # If no path was extracted, validation fails immediately.
+    if not extracted_path:
+        return False
+
     extracted_path = [(p["x"], p["y"]) for p in extracted_path]
-    if not extracted_path or len(extracted_path) < 2:
+    if len(extracted_path) < 2:
         return False
 
     # Check against all valid solutions in the database
@@ -91,17 +95,17 @@ def validate_solution(extracted_path: List[Dict[str, int]], puzzle_data: Dict) -
     return False
 
 
-def analyze_path(solution_path: List[Dict[str, int]], puzzle: Dict) -> Dict:
+def analyze_path(solution_path: Optional[List[Dict[str, int]]], puzzle: Dict) -> Dict:
     """Analyze the solution path for detailed validation metrics
 
     Args:
-        solution_path: List of coordinate dicts representing the solution path
+        solution_path: Optional list of coordinate dicts representing the solution path (can be None)
         puzzle: Puzzle dictionary with puzzle array and metadata
 
     Returns:
         Dictionary with detailed path analysis results
     """
-    solution_path = [(p["x"], p["y"]) for p in solution_path]
+    # Early return with all metrics False if no path was provided
     if not solution_path:
         return {
             "starts_at_start_ends_at_exit": False,
@@ -111,6 +115,8 @@ def analyze_path(solution_path: List[Dict[str, int]], puzzle: Dict) -> Dict:
             "no_rule_crossing": False,
             "fully_valid_path": False,
         }
+
+    solution_path = [(p["x"], p["y"]) for p in solution_path]
 
     # Get puzzle information
     puzzle_array = puzzle.get("puzzle_array", [])

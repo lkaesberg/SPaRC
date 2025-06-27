@@ -123,7 +123,7 @@ async def process_puzzle(client: AsyncOpenAI, puzzle_data: Dict, model: str, tem
                 'error': None
             }
             
-        except (APIConnectionError, APITimeoutError, aiohttp.ClientError, asyncio.TimeoutError) as e:
+        except Exception as e:
             if attempt < max_retries:
                 wait_time = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s
                 console.print(f"[yellow]⚠️  Connection error on puzzle {puzzle_id} (attempt {attempt + 1}/{max_retries + 1}): {str(e)}[/]")
@@ -131,15 +131,9 @@ async def process_puzzle(client: AsyncOpenAI, puzzle_data: Dict, model: str, tem
                 await asyncio.sleep(wait_time)
                 continue
             else:
-                console.print(f"[red]❌ CRITICAL ERROR on puzzle {puzzle_id}: {str(e)}[/]")
-                console.print(f"[red]❌ Exiting without saving current batch to prevent data corruption[/]")
+                console.print(f"[red]❌ ERROR on puzzle {puzzle_id} after {max_retries} retries: {str(e)}[/]")
                 exit(1)
-        
-        except Exception as e:
-            # For non-connection errors, still exit to prevent data corruption
-            console.print(f"[red]❌ CRITICAL ERROR on puzzle {puzzle_id}: {str(e)}[/]")
-            console.print(f"[red]❌ Exiting without saving current batch to prevent data corruption[/]")
-            exit(1)
+
 
 
 async def process_batch(client: AsyncOpenAI, batch_puzzles: List[tuple], model: str, temperature: float, verbose: bool) -> List[Dict]:
