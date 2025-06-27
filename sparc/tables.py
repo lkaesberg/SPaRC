@@ -19,6 +19,16 @@ def create_statistics_table(results: List[Dict]) -> Table:
     non_intersecting = sum(1 for r in results if r['analysis']['non_intersecting_line'])
     no_rule_crossing = sum(1 for r in results if r['analysis']['no_rule_crossing'])
     
+    # Difficulty distribution statistics
+    difficulty_counts = {level: 0 for level in range(1, 6)}
+    difficulty_solved_counts = {level: 0 for level in range(1, 6)}
+    for r in results:
+        level = r['puzzle_data'].get('difficulty_level')
+        if level in difficulty_counts:
+            difficulty_counts[level] += 1
+            if r['solved']:
+                difficulty_solved_counts[level] += 1
+    
     # Path length statistics
     path_lengths = [len(r['extracted_path']) for r in results if r['extracted_path']]
     avg_path_length = sum(path_lengths) / len(path_lengths) if path_lengths else 0
@@ -48,12 +58,23 @@ def create_statistics_table(results: List[Dict]) -> Table:
     stats_table.add_row("No Rule Violations", str(no_rule_crossing), f"{(no_rule_crossing/total)*100:.1f}%")
     stats_table.add_row("", "", "")  # Separator
     
-    # Performance metrics
+    # Difficulty distribution
+    for level in range(1, 6):
+        total_level = difficulty_counts[level]
+        solved_level = difficulty_solved_counts[level]
+        solved_pct = (solved_level / total_level * 100) if total_level > 0 else 0.0
+        value_col = f"{solved_level}/{total_level}" if total_level > 0 else "0/0"
+        stats_table.add_row(f"Difficulty {level} Solved", value_col, f"{solved_pct:.1f}%")
+    stats_table.add_row("", "", "")  # Separator
+    
+    # Path length statistics
     stats_table.add_row("Avg Path Length", f"{avg_path_length:.1f} steps", "")
     if path_lengths:
         stats_table.add_row("Min Path Length", f"{min(path_lengths)} steps", "")
         stats_table.add_row("Max Path Length", f"{max(path_lengths)} steps", "")
     stats_table.add_row("", "", "")  # Separator
+    
+    # Time statistics
     stats_table.add_row("Total Time", f"{total_time:.1f} seconds", "")
     stats_table.add_row("Avg Time per Puzzle", f"{avg_time:.2f} seconds", "")
     stats_table.add_row("Puzzles per Minute", f"{(total / total_time * 60):.1f}", "")
