@@ -2,10 +2,19 @@ from typing import Dict
 import json
 
 
+def _format_grid_as_markdown(grid):
+    """Convert a 2-D grid (list of lists) into a markdown table string."""
+    md_rows = []
+    for row in grid:
+        md_rows.append("| " + " | ".join(map(str, row)) + " |")
+    return "\n".join(md_rows)
+
+
 def generate_prompt(puzzle_data: Dict) -> str:
     grid_size = puzzle_data.get("grid_size", {"width": 0, "height": 0})
     puzzle_array = puzzle_data.get("puzzle_array", [])
-    grid_str = "\n".join(map(str, puzzle_array))
+    # Represent the puzzle grid as a markdown table for better readability
+    grid_str = _format_grid_as_markdown(puzzle_array)
     start_pos = None
     end_pos = None
     for y, row in enumerate(puzzle_array):
