@@ -4,10 +4,12 @@ import json
 import os
 import signal
 import time
-from typing import Dict, List, Set
+import csv
+import datetime
+from typing import Dict, List, Set, Optional
 from rich.console import Console
 from rich.table import Table
-from rich.progress import Progress, TaskID, SpinnerColumn, TextColumn, BarColumn, TimeElapsedColumn, MofNCompleteColumn
+from rich.progress import Progress, TaskID, SpinnerColumn, TextColumn, BarColumn, MofNCompleteColumn, TimeElapsedColumn
 from rich.panel import Panel
 from rich import box
 from sparc.prompt import generate_prompt
@@ -37,49 +39,74 @@ def format_puzzle_info(puzzle_data: Dict) -> str:
 
 
 def save_results(results: List[Dict], filename: str) -> None:
-    """Save results to a JSON file"""
+    """Save results to a JSONL file (one JSON object per line).
+    Each line contains the original puzzle data with an added
+    "result" key that stores the solver output, analysis and timing.
+    """
     try:
-        # Convert results to a serializable format
-        serializable_results = []
-        for result in results:
-            serializable_result = {
-                'puzzle_id': result['puzzle_id'],
-                'solved': result['solved'],
-                'analysis': result['analysis'],
-                'processing_time': result['processing_time'],
-                'extracted_path': result['extracted_path'],
-                'error': result.get('error'),
-                'puzzle_data': result['puzzle_data']
-            }
-            serializable_results.append(serializable_result)
-        
         with open(filename, 'w') as f:
-            json.dump({
-                'results': serializable_results,
-                'total_processed': len(results),
-                'timestamp': time.time()
-            }, f, indent=2)
-        
+            for result in results:
+                # The original puzzle data
+                puzzle_obj = dict(result['puzzle_data'])  # shallow copy
+                # Attach result meta-data
+                puzzle_obj['result'] = {
+                    'puzzle_id': result['puzzle_id'],
+                    'solved': result['solved'],
+                    'analysis': result['analysis'],
+                    'processing_time': result['processing_time'],
+                    'extracted_path': result['extracted_path'],
+                    'message': result.get('message'),
+                    'error': result.get('error'),
+                }
+                f.write(json.dumps(puzzle_obj) + "\n")
+
         console.print(f"[green]💾 Results saved to {filename}[/]")
     except Exception as e:
         console.print(f"[red]❌ Failed to save results: {str(e)}[/]")
 
 
 def load_results(filename: str) -> tuple[List[Dict], Set[str]]:
-    """Load results from a JSON file and return results and processed puzzle IDs"""
+    """Load results from a JSONL or legacy JSON file.
+    Returns a tuple (results_list, processed_ids_set).
+    """
     if not os.path.exists(filename):
         return [], set()
-    
+
+    # Determine by extension
+    is_jsonl = filename.endswith('.jsonl')
+
     try:
-        with open(filename, 'r') as f:
-            data = json.load(f)
-        
-        results = data.get('results', [])
-        processed_ids = {result['puzzle_id'] for result in results}
-        
+        if is_jsonl:
+            results = []
+            with open(filename, 'r') as f:
+                for line in f:
+                    if not line.strip():
+                        continue
+                    obj = json.loads(line)
+                    puzzle_data = {k: v for k, v in obj.items() if k != 'result'}
+                    result_meta = obj.get('result', {})
+                    combined = {
+                        'puzzle_id': result_meta.get('puzzle_id', puzzle_data.get('id', 'unknown')),
+                        'puzzle_data': puzzle_data,
+                        'extracted_path': result_meta.get('extracted_path'),
+                        'solved': result_meta.get('solved', False),
+                        'analysis': result_meta.get('analysis', {}),
+                        'processing_time': result_meta.get('processing_time', 0.0),
+                        'message': result_meta.get('message'),
+                        'error': result_meta.get('error'),
+                    }
+                    results.append(combined)
+            processed_ids = {r['puzzle_id'] for r in results}
+        else:
+            # Legacy JSON format
+            with open(filename, 'r') as f:
+                data = json.load(f)
+            results = data.get('results', [])
+            processed_ids = {result['puzzle_id'] for result in results}
+
         console.print(f"[green]📂 Loaded {len(results)} previous results from {filename}[/]")
         return results, processed_ids
-    
+
     except Exception as e:
         console.print(f"[red]❌ Failed to load results: {str(e)}[/]")
         return [], set()
@@ -195,8 +222,10 @@ async def process_batch(client: AsyncOpenAI, batch_puzzles: List[tuple], model: 
     return processed_results
 
 
-async def process_dataset_async(dataset, client: AsyncOpenAI, model: str, temperature: float, batch_size: int, verbose: bool, results_file: str, skip_processed: Set[str]) -> List[Dict]:
-    """Process the entire dataset in batches with graceful shutdown support"""
+async def process_dataset_async(dataset, client: AsyncOpenAI, model: str, temperature: float, batch_size: int, verbose: bool, results_file: str, skip_processed: Set[str], max_new: Optional[int] = None) -> List[Dict]:
+    """Process the dataset in batches with graceful shutdown support
+    Only up to `max_new` unseen puzzles will be processed if specified.
+    """
     global shutdown_requested
     
     total_puzzles = len(dataset)
@@ -209,6 +238,11 @@ async def process_dataset_async(dataset, client: AsyncOpenAI, model: str, temper
     # Count remaining puzzles to process
     remaining_puzzles = [i for i in range(total_puzzles) if dataset[i].get("id", f"idx_{i}") not in skip_processed]
     total_remaining = len(remaining_puzzles)
+    
+    # Apply limit if requested
+    if max_new is not None:
+        remaining_puzzles = remaining_puzzles[:max_new]
+        total_remaining = len(remaining_puzzles)
     
     if total_remaining == 0:
         console.print("[green]✅ All puzzles already processed![/]")
@@ -223,11 +257,16 @@ async def process_dataset_async(dataset, client: AsyncOpenAI, model: str, temper
         MofNCompleteColumn(),
         TextColumn("•"),
         TimeElapsedColumn(),
+        TextColumn("ETA: {task.fields[eta]}", justify="right"),
         console=console,
         transient=not verbose
     ) as progress:
         
-        task = progress.add_task("[cyan]Processing puzzles...", total=total_remaining)
+        task = progress.add_task("[cyan]Processing puzzles...", total=total_remaining, eta="--:--:--")
+        
+        start_time_overall = time.time()
+        processed_so_far = 0
+        avg_time_est: Optional[float] = None  # seconds per puzzle based on completed batches
         
         # Process remaining puzzles in batches
         for batch_start in range(0, total_remaining, batch_size):
@@ -240,20 +279,162 @@ async def process_dataset_async(dataset, client: AsyncOpenAI, model: str, temper
             batch_puzzles = [(dataset[i], i) for i in batch_indices]
             
             current_batch_ids = [puzzle_data.get("id", f"idx_{i}") for puzzle_data, i in batch_puzzles]
-            progress.update(task, description=f"[cyan]Processing batch: {', '.join(current_batch_ids[:3])}{'...' if len(current_batch_ids) > 3 else ''}")
+            progress.update(task, description="[cyan]Processing batch...")
             
-            batch_results = await process_batch(client, batch_puzzles, model, temperature, verbose)
+            # Launch batch processing as background task so we can refresh ETA countdown
+            batch_task = asyncio.create_task(process_batch(client, batch_puzzles, model, temperature, verbose))
+
+            # Periodically refresh ETA while the batch is running
+            while not batch_task.done():
+                elapsed = time.time() - start_time_overall
+                if avg_time_est is not None:
+                    eta_seconds = max(0.0, avg_time_est * total_remaining - elapsed)
+                else:
+                    eta_seconds = float('inf')
+                progress.update(task, eta=_format_duration(eta_seconds))
+                await asyncio.sleep(1)
+
+            batch_results = await batch_task
             all_results.extend(batch_results)
             
             # Save intermediate results after each batch
             save_results(all_results, results_file)
             
-            progress.update(task, advance=len(batch_puzzles))
+            # Also persist updated tables after each batch
+            save_tables_csv(all_results, results_file.rsplit('.', 1)[0])
+            
+            # Update processed count and ETA
+            processed_so_far += len(batch_puzzles)
+            elapsed = time.time() - start_time_overall
+            # Update average estimate now that a batch finished
+            avg_time_est = elapsed / processed_so_far
+            eta_seconds = max(0.0, avg_time_est * total_remaining - elapsed)
+            eta_str = _format_duration(eta_seconds)
+            
+            progress.update(task, advance=len(batch_puzzles), eta=eta_str)
             
             if shutdown_requested:
                 break
     
     return all_results
+
+
+def save_tables_csv(results: List[Dict], filename_base: str) -> None:
+    """Save summary statistics and detailed per-puzzle results as CSV.
+    Two files are produced:
+        <prefix>_stats.csv   – aggregated metrics
+        <prefix>_details.csv – per-puzzle info
+    """
+    try:
+        # 1) Summary statistics -------------------------------------------------
+        total = len(results)
+        solved_count = sum(1 for r in results if r['solved'])
+        success_rate = (solved_count / total * 100) if total else 0.0
+
+        valid_paths = sum(1 for r in results if r['analysis']['fully_valid_path'])
+        connected_paths = sum(1 for r in results if r['analysis']['connected_line'])
+        start_end_correct = sum(1 for r in results if r['analysis']['starts_at_start_ends_at_exit'])
+        non_intersecting = sum(1 for r in results if r['analysis']['non_intersecting_line'])
+        no_rule_crossing = sum(1 for r in results if r['analysis']['no_rule_crossing'])
+
+        difficulty_counts = {lvl: 0 for lvl in range(1, 6)}
+        difficulty_solved = {lvl: 0 for lvl in range(1, 6)}
+        for r in results:
+            lvl = r['puzzle_data'].get('difficulty_level')
+            if lvl in difficulty_counts:
+                difficulty_counts[lvl] += 1
+                if r['solved']:
+                    difficulty_solved[lvl] += 1
+
+        path_lengths = [len(r['extracted_path']) for r in results if r['extracted_path']]
+        avg_path_length = sum(path_lengths) / len(path_lengths) if path_lengths else 0
+
+        processing_times = [r['processing_time'] for r in results]
+        total_time = sum(processing_times)
+        avg_time = total_time / total if total else 0
+
+        stats_rows = [
+            ("Total Puzzles Processed", total, "100.0%"),
+            ("Correctly Solved", solved_count, f"{success_rate:.1f}%"),
+            ("Failed", total - solved_count, f"{100 - success_rate:.1f}%"),
+            ("", "", ""),
+            ("Fully Valid Paths", valid_paths, f"{valid_paths/total*100:.1f}%" if total else "0.0%"),
+            ("Connected Paths", connected_paths, f"{connected_paths/total*100:.1f}%" if total else "0.0%"),
+            ("Correct Start/End", start_end_correct, f"{start_end_correct/total*100:.1f}%" if total else "0.0%"),
+            ("Non-Intersecting", non_intersecting, f"{non_intersecting/total*100:.1f}%" if total else "0.0%"),
+            ("No Rule Violations", no_rule_crossing, f"{no_rule_crossing/total*100:.1f}%" if total else "0.0%"),
+            ("", "", ""),
+        ]
+
+        # Difficulty rows
+        for lvl in range(1, 6):
+            solved_lvl = difficulty_solved[lvl]
+            total_lvl = difficulty_counts[lvl]
+            pct = solved_lvl / total_lvl * 100 if total_lvl else 0.0
+            stats_rows.append((f"Difficulty {lvl} Solved", f"{solved_lvl}/{total_lvl}", f"{pct:.1f}%"))
+
+        stats_rows.extend([
+            ("", "", ""),
+            ("Avg Path Length", f"{avg_path_length:.1f} steps", ""),
+            ("Min Path Length", f"{min(path_lengths) if path_lengths else 0} steps", ""),
+            ("Max Path Length", f"{max(path_lengths) if path_lengths else 0} steps", ""),
+            ("", "", ""),
+            ("Total Time", f"{total_time:.1f} seconds", ""),
+            ("Avg Time per Puzzle", f"{avg_time:.2f} seconds", ""),
+            ("Puzzles per Minute", f"{(total/total_time*60):.1f}" if total_time else "0.0", ""),
+        ])
+
+        with open(f"{filename_base}_stats.csv", "w", newline="") as f_stats:
+            writer = csv.writer(f_stats)
+            writer.writerow(["Metric", "Value", "Percentage"])
+            writer.writerows(stats_rows)
+
+        # 2) Detailed per-puzzle results --------------------------------------
+        with open(f"{filename_base}_details.csv", "w", newline="") as f_det:
+            writer = csv.writer(f_det)
+            writer.writerow(["Puzzle ID", "Difficulty", "Solved", "Path Length", "Time (s)", "Issues"])
+            for r in results:
+                puzzle_id = r['puzzle_id']
+                difficulty = r['puzzle_data'].get('difficulty_level', 'N/A')
+                solved_status = "PASS" if r['solved'] else "FAIL"
+                path_len = len(r['extracted_path']) if r['extracted_path'] else 0
+                time_taken = f"{r['processing_time']:.2f}"
+
+                issues = []
+                analysis = r.get('analysis', {})
+                if analysis and not analysis.get('fully_valid_path', True):
+                    if not analysis.get('starts_at_start_ends_at_exit', True):
+                        issues.append("start/end")
+                    if not analysis.get('connected_line', True):
+                        issues.append("disconnected")
+                    if not analysis.get('non_intersecting_line', True):
+                        issues.append("intersecting")
+                    if not analysis.get('no_rule_crossing', True):
+                        issues.append("rules")
+                issues_str = ", ".join(issues) if issues else "None"
+
+                writer.writerow([puzzle_id, difficulty, solved_status, path_len, time_taken, issues_str])
+
+        console.print(f"[green]📑 CSV tables saved with prefix {filename_base}_*.csv[/]")
+    except Exception as e:
+        console.print(f"[red]❌ Failed to save CSV tables: {e}[/]")
+
+
+def _format_duration(seconds: float) -> str:
+    """Return HH:MM:SS string for a duration in seconds."""
+    if seconds <= 0 or seconds == float('inf'):
+        return "--:--:--"
+    return str(datetime.timedelta(seconds=int(seconds)))
+
+
+def _compute_eta(elapsed: float, processed: int, total: int) -> float:
+    """Return seconds remaining based on average time per finished sample."""
+    if processed == 0:
+        return float('inf')
+    avg = elapsed / processed
+    expected_total = avg * total
+    remaining = max(0.0, expected_total - elapsed)
+    return remaining
 
 
 def main() -> None:
@@ -289,9 +470,9 @@ def main() -> None:
         help="Number of puzzles to process concurrently (default: 5)"
     )
     parser.add_argument(
-        "--results-file", 
-        default="sparc_results.json",
-        help="File to save/load intermediate results (default: sparc_results.json)"
+        "--results-file",
+        default=None,
+        help="File to save/load intermediate results (default: <model>.jsonl)"
     )
     parser.add_argument(
         "--overwrite", 
@@ -303,8 +484,18 @@ def main() -> None:
         action="store_true",
         help="Show detailed output for each puzzle"
     )
+    parser.add_argument(
+        "--max-new",
+        type=int,
+        default=None,
+        help="Process at most this many new puzzles before terminating"
+    )
     
     args = parser.parse_args()
+
+    # Determine results file: use provided name or model name, ensure .jsonl extension
+    base_name = args.results_file if args.results_file else args.model.replace('/', '_')
+    results_file = base_name if base_name.endswith('.jsonl') else f"{base_name}.jsonl"
 
     # Header
     console.print(Panel.fit("🧩 SPaRC: Spatial Pathfinding and Reasoning Challenge", style="bold blue"))
@@ -317,9 +508,9 @@ def main() -> None:
     # Load existing results unless overwrite is requested
     skip_processed = set()
     if not args.overwrite:
-        _, skip_processed = load_results(args.results_file)
-    elif os.path.exists(args.results_file):
-        console.print(f"[yellow]🗑️  Overwrite requested, ignoring existing {args.results_file}[/]")
+        _, skip_processed = load_results(results_file)
+    elif os.path.exists(results_file):
+        console.print(f"[yellow]🗑️  Overwrite requested, ignoring existing {results_file}[/]")
     
     # Configuration info
     config_table = Table(box=box.SIMPLE)
@@ -331,7 +522,8 @@ def main() -> None:
     config_table.add_row("Model", args.model)
     config_table.add_row("Temperature", str(args.temperature))
     config_table.add_row("Batch Size", str(args.batch_size))
-    config_table.add_row("Results File", args.results_file)
+    config_table.add_row("Results File", results_file)
+    config_table.add_row("Max New", str(args.max_new) if args.max_new else "All")
     config_table.add_row("Base URL", args.base_url)
     
     console.print(Panel(config_table, title="Configuration", style="blue"))
@@ -345,7 +537,7 @@ def main() -> None:
     try:
         # Run async processing
         results = asyncio.run(process_dataset_async(
-            dataset, client, args.model, args.temperature, args.batch_size, args.verbose, args.results_file, skip_processed
+            dataset, client, args.model, args.temperature, args.batch_size, args.verbose, results_file, skip_processed, args.max_new
         ))
         
         if shutdown_requested:
@@ -363,7 +555,10 @@ def main() -> None:
     console.print("\n")
     console.print(create_detailed_results_table(results))
     
-    console.print(f"\n[green]📁 Final results saved to {args.results_file}[/]")
+    console.print(f"\n[green]📁 Final results saved to {results_file}[/]")
+
+    # Save tables as CSV
+    save_tables_csv(results, results_file.rsplit('.', 1)[0])
 
 
 if __name__ == "__main__":

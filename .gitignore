@@ -3,4 +3,6 @@ sparc/__pycache__/
 .env
 .venv/
 .vscode/
-sparc_results.json
+*.jsonl
+*.json
+*.csv
