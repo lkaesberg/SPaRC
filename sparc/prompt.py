@@ -133,5 +133,5 @@ Now we can draw a line to (5,0) to reach the end node.
 
 **Example Solution Path Format:**
 ####
-[(0, 0), (1, 0), (2, 0), (2, 1), ...]
+(0,0), (1,0), (2,0), (2,1), ...
 """
