@@ -12,7 +12,7 @@
   </a>
   |
   <a href="https://huggingface.co/datasets/lkaesberg/SPaRC" style="margin-left:1em; text-decoration:none; font-size:1.1em;">
-    <strong>📚 Dataset on Hugging Face</strong>
+    <strong>🤗 Dataset on Hugging Face</strong>
   </a>
 </div>
 
