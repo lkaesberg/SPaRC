@@ -26,7 +26,6 @@ def generate_prompt(puzzle_data: Dict) -> str:
 You are a specialized AI proficient in spatial reasoning and solving puzzles from the game 'The Witness'. Your goal is to find a valid path (a continuous line) from the specified Start Node to the End Node on the provided grid, adhering to all puzzle rules.
 
 ## Core Concepts & Grid Basics
-*   **Grid Dimensions:** The puzzle grid has {grid_size['width']} columns and {grid_size['height']} rows.
 *   **Coordinate System:** Nodes are identified by `(x, y)` coordinates. `(0,0)` is the top-left node. `x` increases to the right, `y` increases downwards.
 *   **Path:** The solution is a single, continuous line connecting adjacent nodes either horizontally or vertically.
 *   **No Revisits:** The path **CANNOT** visit the same node more than once.
