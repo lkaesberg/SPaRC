@@ -14,22 +14,6 @@ async def process_puzzle(client: AsyncOpenAI, puzzle_data: Dict, model: str, tem
     start_time = time.time()
     puzzle_id = puzzle_data.get("id", f"idx_{puzzle_index}")
     max_retries = 3
-    return {
-        'puzzle_id': puzzle_id,
-        'puzzle_data': puzzle_data,
-        'extracted_path': [],
-        'solved': True,
-        'analysis': {
-            'fully_valid_path': True,
-            'connected_line': True,
-            'starts_at_start_ends_at_exit': True,
-            'non_intersecting_line': True,
-            'no_rule_crossing': True
-        },
-        'processing_time': 0.1,
-        'message': 'Test message',
-        'error': None
-    }
     
     for attempt in range(max_retries + 1):
         try:
