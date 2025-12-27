@@ -4,6 +4,12 @@ from typing import Dict
 from openai import AsyncOpenAI
 from rich.console import Console
 
+import gymnasium as gym
+import SPaRC_Gym
+import numpy as np
+import json
+import re
+
 from sparc.prompt import generate_prompt
 from sparc.validation import extract_solution_path, validate_solution, analyze_path
 
@@ -58,3 +64,91 @@ async def process_puzzle(client: AsyncOpenAI, puzzle_data: Dict, model: str, tem
                 console.print(f"[red]❌ ERROR on puzzle {puzzle_id} after {max_retries} retries: {str(e)}[/]")
                 # Instead of exiting, we re-raise the exception so it can be handled by the batch processor
                 raise e
+
+
+async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, model: str, temperature: float, puzzle_index: int) -> Dict:
+    """(step-by-step) Process a single puzzle asynchronously with retry logic for connection errors"""
+    start_time = time.time()
+    puzzle_id = puzzle_data.get("id", f"idx_{puzzle_index}")
+    max_retries = 3
+    
+    for attempt in range(max_retries + 1):
+        try:
+            max_steps = 100
+            env = gym.make("SPaRC-Gym", render_mode=None, traceback=False, observation = 'SPaRC', max_steps=100)
+            options = {'puzzle_id': puzzle_id}
+            obs, info = env.reset(options=options)
+            Keep_Turns = 4
+            reward = 0
+            all_messages = []
+            steps = 0
+            messages=[{ "role": "system", "content": f"You are an expert at solving puzzles games. {generate_prompt(puzzle_data, step_by_step=True)}"}]
+            for step in range(max_steps+1):
+                steps += 1
+                user_payload = json.dumps(make_json_safe({'obs':obs,'info':info,'reward':reward}))
+                messages.append({"role":"user","content":user_payload})
+                response = await client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    temperature=temperature,
+                )
+                
+                reply = response.choices[0].message.content.strip()
+                all_messages.append(reply)
+                last_line = reply.splitlines()[-1].strip()
+                m = re.match(r"^(?:Final:\s*)?([0-3])$", last_line)
+                action = int(m.group(1))
+                obs, reward, terminated, truncated, info = env.step(action)
+                
+                messages.append({"role":"assistant","content": f"Final: {action}"})
+                system = messages[0]
+                tail = messages[-(Keep_Turns*2):]
+                messages = [system] + tail
+                
+                if terminated or truncated:
+                    break
+                
+            processing_time = time.time() - start_time
+            if reward == 1:
+                solved = True
+            else:
+                solved = False
+                
+            return {
+                'puzzle_id': puzzle_id,
+                'puzzle_data': puzzle_data,
+                'solved': solved,
+                'processing_time': processing_time,
+                'message': all_messages,
+                'Observation': obs,
+                'Info': info,
+                'Reward': reward,
+                'Terminated': terminated,
+                'Truncated': truncated,
+                'Steps_Taken': steps,
+                'error': None
+            }
+            
+        
+        except Exception as e:
+            if attempt < max_retries:
+                wait_time = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s
+                console.print(f"[yellow]⚠️  Connection error on puzzle {puzzle_id} (attempt {attempt + 1}/{max_retries + 1}): {str(e)}[/]")
+                console.print(f"[yellow]🔄 Retrying in {wait_time} seconds...[/]")
+                await asyncio.sleep(wait_time)
+                continue
+            else:
+                console.print(f"[red]❌ ERROR on puzzle {puzzle_id} after {max_retries} retries: {str(e)}[/]")
+                # Instead of exiting, we re-raise the exception so it can be handled by the batch processor
+                raise e
+
+def make_json_safe(obj, seen=None):
+    if seen is None: seen=set()
+    oid=id(obj)
+    if oid in seen: return None
+    seen.add(oid)
+    if isinstance(obj, np.ndarray): return obj.tolist()
+    if isinstance(obj, dict): return {k: make_json_safe(v,seen) for k,v in obj.items()}
+    if isinstance(obj,(list,tuple)): return [make_json_safe(v,seen) for v in obj]
+    if isinstance(obj,(int,float,str,bool)) or obj is None: return obj
+    return str(obj)
