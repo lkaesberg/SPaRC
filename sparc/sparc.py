@@ -57,8 +57,8 @@ def save_results(results: List[Dict], filename: str) -> None:
                         'processing_time': result['processing_time'],
                         'steps_taken': result.get('steps_taken'),
                         'reward': result.get('reward'),
-                        'terminated': result.get('terminated'),
-                        'truncated': result.get('truncated'),
+                        'reached_end': result.get('reached_end'),
+                        'no_legal_actions': result.get('no_legal_actions'),
                         'message': result.get('message'),
                         'error': result.get('error'),
                     }
@@ -112,8 +112,8 @@ def load_results(filename: str) -> tuple[List[Dict], Set[str]]:
                             'processing_time': result_meta.get('processing_time', 0.0),
                             'steps_taken': result_meta.get('steps_taken'),
                             'reward': result_meta.get('reward'),
-                            'terminated': result_meta.get('terminated'),
-                            'truncated': result_meta.get('truncated'),
+                            'reached_end': result_meta.get('reached_end'),
+                            'no_legal_actions': result_meta.get('no_legal_actions'),
                             'message': result_meta.get('message'),
                             'error': result_meta.get('error'),
                         }
@@ -232,8 +232,8 @@ async def process_batch_step_by_step(client: AsyncOpenAI, batch_puzzles: List[tu
                 
                 console.print(f"[{status_style}]{status}[/] {puzzle_info} | Steps: {steps_taken} | Time: {result['processing_time']:.2f}s")
                 
-                if result.get('truncated'):
-                    console.print(f"   [yellow]⚠️  Truncated (max steps reached)[/]")
+                if result.get('no_legal_actions'):
+                    console.print(f"   [yellow]⚠️  No legal actions (couldn't reach end)[/]")
                 console.print()
     
     return processed_results
@@ -382,13 +382,15 @@ def save_tables_csv(results: List[Dict], filename_base: str) -> None:
             # Gym mode stats
             steps_list = [r.get('steps_taken', 0) for r in results if r.get('steps_taken')]
             avg_steps = sum(steps_list) / len(steps_list) if steps_list else 0
-            truncated_count = sum(1 for r in results if r.get('truncated'))
+            reached_end_count = sum(1 for r in results if r.get('reached_end'))
+            no_legal_actions_count = sum(1 for r in results if r.get('no_legal_actions'))
             
             stats_rows.extend([
                 ("Avg Steps Taken", f"{avg_steps:.1f} steps", ""),
                 ("Min Steps", f"{min(steps_list) if steps_list else 0} steps", ""),
                 ("Max Steps", f"{max(steps_list) if steps_list else 0} steps", ""),
-                ("Truncated (max steps)", truncated_count, f"{truncated_count/total*100:.1f}%" if total else "0.0%"),
+                ("Reached End", reached_end_count, f"{reached_end_count/total*100:.1f}%" if total else "0.0%"),
+                ("No Legal Actions", no_legal_actions_count, f"{no_legal_actions_count/total*100:.1f}%" if total else "0.0%"),
                 ("", "", ""),
             ])
         else:
@@ -442,15 +444,16 @@ def save_tables_csv(results: List[Dict], filename_base: str) -> None:
             writer = csv.writer(f_det)
             
             if is_gym_mode:
-                writer.writerow(["Puzzle ID", "Difficulty", "Solved", "Steps Taken", "Time (s)", "Truncated"])
+                writer.writerow(["Puzzle ID", "Difficulty", "Solved", "Steps Taken", "Time (s)", "Reached End", "No Legal Actions"])
                 for r in results:
                     puzzle_id = r['puzzle_id']
                     difficulty = r['puzzle_data'].get('difficulty_level', 'N/A')
                     solved_status = "PASS" if r['solved'] else "FAIL"
                     steps_taken = r.get('steps_taken', 0)
                     time_taken = f"{r['processing_time']:.2f}"
-                    truncated = "Yes" if r.get('truncated') else "No"
-                    writer.writerow([puzzle_id, difficulty, solved_status, steps_taken, time_taken, truncated])
+                    reached_end = "Yes" if r.get('reached_end') else "No"
+                    no_legal_actions = "Yes" if r.get('no_legal_actions') else "No"
+                    writer.writerow([puzzle_id, difficulty, solved_status, steps_taken, time_taken, reached_end, no_legal_actions])
             else:
                 writer.writerow(["Puzzle ID", "Difficulty", "Solved", "Path Length", "Time (s)", "Issues"])
                 for r in results:

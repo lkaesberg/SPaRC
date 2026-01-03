@@ -54,13 +54,15 @@ def create_statistics_table(results: List[Dict]) -> Table:
         # Gym mode statistics
         steps_list = [r.get('steps_taken', 0) for r in results if r.get('steps_taken')]
         avg_steps = sum(steps_list) / len(steps_list) if steps_list else 0
-        truncated_count = sum(1 for r in results if r.get('truncated'))
+        reached_end_count = sum(1 for r in results if r.get('reached_end'))
+        no_legal_actions_count = sum(1 for r in results if r.get('no_legal_actions'))
         
         stats_table.add_row("Avg Steps Taken", f"{avg_steps:.1f} steps", "")
         if steps_list:
             stats_table.add_row("Min Steps", f"{min(steps_list)} steps", "")
             stats_table.add_row("Max Steps", f"{max(steps_list)} steps", "")
-        stats_table.add_row("Truncated (max steps)", str(truncated_count), f"{(truncated_count/total)*100:.1f}%")
+        stats_table.add_row("Reached End", str(reached_end_count), f"{(reached_end_count/total)*100:.1f}%")
+        stats_table.add_row("No Legal Actions", str(no_legal_actions_count), f"{(no_legal_actions_count/total)*100:.1f}%")
         stats_table.add_row("", "", "")  # Separator
     else:
         # Single-shot mode: Path analysis statistics
@@ -122,7 +124,8 @@ def create_detailed_results_table(results: List[Dict], show_limit: int = 20) -> 
     if is_gym:
         table.add_column("Steps", style="blue", width=8)
         table.add_column("Time (s)", style="green", width=8)
-        table.add_column("Truncated", style="red", width=10)
+        table.add_column("Reached End", style="yellow", width=11)
+        table.add_column("No Legal", style="red", width=10)
         
         for result in results[:show_limit]:
             puzzle_id = result['puzzle_id']
@@ -130,9 +133,10 @@ def create_detailed_results_table(results: List[Dict], show_limit: int = 20) -> 
             status = "✅ PASS" if result['solved'] else "❌ FAIL"
             steps = str(result.get('steps_taken', 0))
             time_taken = f"{result['processing_time']:.2f}"
-            truncated = "Yes" if result.get('truncated') else "No"
+            reached_end = "Yes" if result.get('reached_end') else "No"
+            no_legal = "Yes" if result.get('no_legal_actions') else "No"
             
-            table.add_row(puzzle_id, str(difficulty), status, steps, time_taken, truncated)
+            table.add_row(puzzle_id, str(difficulty), status, steps, time_taken, reached_end, no_legal)
     else:
         table.add_column("Path Length", style="blue", width=10)
         table.add_column("Time (s)", style="green", width=8)

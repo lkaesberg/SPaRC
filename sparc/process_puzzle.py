@@ -123,8 +123,8 @@ async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, mo
                 'observation': obs,
                 'info': info,
                 'reward': reward,
-                'terminated': terminated,
-                'truncated': truncated,
+                'reached_end': terminated,  # Reached end location (doesn't mean solved)
+                'no_legal_actions': truncated,  # Ran out of legal moves before reaching end
                 'steps_taken': steps,
                 'error': None
             }
