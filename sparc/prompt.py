@@ -100,20 +100,26 @@ def generate_prompt(puzzle_data: Dict, step_by_step: bool = False) -> str:
     [0,1,0,0]
     [0,0,0,0]
 
-    EXAMPLE SOLUTION:
+    EXAMPLE STEP-BY-STEP SOLUTION:
 
-    We start at (0,2) and draw a line to (0,0).
-    We then draw a line to (2,0) to reach the dot at (1,0) and surround the 3 count triangle.
-    We then draw a line to (2,2) here we go down to touch the third side of the triangle cell and therefore validate the 3 count triangle.
-    We continue down to (2,6) to validate the polyshape 112 and also the green star with the green polyshape
-    After this we draw a line to (4,6) to start validating the polyshape 624 by surrounding it.
-    Therefore we have to draw a line to (6,4) over (4,4) which creates a region for the stone at (5,5) which validates the stone.
-    We continue up to (6,2) for the polyshape 624 and then go to (4,2) and after this to (4,0) to finaly validate the polyshape 624.
-    This also validates the two green stars at (3,3) and (3,5) with each other and the black stone at (3,1) because its the only stone in its region.
-    This line also creates a region for the black stone at (5,1) because its the only stone in its region.
-    Now we can draw a line to (5,0) to reach the end node.
-
-    #### (0,2),(0,1),(0,0),(1,0),(2,0),(2,1),(2,2),(2,3),(2,4),(2,5),(2,6),(3,6),(4,6),(4,5),(4,4),(5,4),(6,4),(6,3),(6,2),(5,2),(4,2),(4,1),(4,0),(5,0)
+    Current position: (0,2)
+    
+    <think>
+    I'm at the start position (0,2). I need to reach the end at (5,0).
+    Looking at the puzzle constraints:
+    - There's a dot at (1,0) that I must pass through
+    - There's a 3-count triangle (C-R) at (1,1) that needs 3 edges touched
+    
+    My options from (0,2):
+    - Right (0): Move to (1,2) - possible
+    - Up (1): Move to (0,1) - possible, heading toward the dot at (1,0)
+    - Left (2): Would go to (-1,2) - invalid, out of bounds
+    - Down (3): Move to (0,3) - possible
+    
+    Going up seems best as it leads toward the dot at (1,0) and will help surround the triangle at (1,1) to touch 3 of its edges.
+    </think>
+    
+    Final: 1
 
     ## Puzzle Input Data
     *   **Start Node:** {start_pos}
@@ -130,11 +136,12 @@ def generate_prompt(puzzle_data: Dict, step_by_step: bool = False) -> str:
 
     ## Task & Output Format
     The Puzzle is solved in a step-by-step manner. For each step, provide your reasoning and the action taken.
-    You MAY think step‐by‐step (feel free to “<think>…”), but you MUST end with:
+    You MAY think step‐by‐step (feel free to "<think>…"), but you MUST end with:
     Final: <digit>
     where <digit> is exactly one of 0=right, 1=up, 2=left, 3=down.
     No other output beyond your reasoning and that Final line.
     """
+    
     else:
         return f"""
     ## Objective

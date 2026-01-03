@@ -120,12 +120,12 @@ async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, mo
                 'solved': solved,
                 'processing_time': processing_time,
                 'message': all_messages,
-                'Observation': obs,
-                'Info': info,
-                'Reward': reward,
-                'Terminated': terminated,
-                'Truncated': truncated,
-                'Steps_Taken': steps,
+                'observation': obs,
+                'info': info,
+                'reward': reward,
+                'terminated': terminated,
+                'truncated': truncated,
+                'steps_taken': steps,
                 'error': None
             }
             

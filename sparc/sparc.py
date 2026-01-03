@@ -12,7 +12,7 @@ from rich.table import Table
 from rich.progress import Progress, TaskID, SpinnerColumn, TextColumn, BarColumn, MofNCompleteColumn, TimeElapsedColumn
 from rich.panel import Panel
 from rich import box
-from sparc.process_puzzle import process_puzzle
+from sparc.process_puzzle import process_puzzle, process_puzzle_step_by_step
 from sparc.tables import create_statistics_table, create_detailed_results_table
 from datasets import load_dataset
 from openai import AsyncOpenAI, APIConnectionError, APITimeoutError
@@ -41,22 +41,38 @@ def save_results(results: List[Dict], filename: str) -> None:
     """Save results to a JSONL file (one JSON object per line).
     Each line contains the original puzzle data with an added
     "result" key that stores the solver output, analysis and timing.
+    Handles both single-shot and gym mode result formats.
     """
     try:
         with open(filename, 'w') as f:
             for result in results:
                 # The original puzzle data
                 puzzle_obj = dict(result['puzzle_data'])  # shallow copy
-                # Attach result meta-data
-                puzzle_obj['result'] = {
-                    'puzzle_id': result['puzzle_id'],
-                    'solved': result['solved'],
-                    'analysis': result['analysis'],
-                    'processing_time': result['processing_time'],
-                    'extracted_path': result['extracted_path'],
-                    'message': result.get('message'),
-                    'error': result.get('error'),
-                }
+                # Check if this is gym mode (has 'steps_taken') or single-shot mode (has 'analysis')
+                if 'steps_taken' in result:
+                    # Gym mode result
+                    puzzle_obj['result'] = {
+                        'puzzle_id': result['puzzle_id'],
+                        'solved': result['solved'],
+                        'processing_time': result['processing_time'],
+                        'steps_taken': result.get('steps_taken'),
+                        'reward': result.get('reward'),
+                        'terminated': result.get('terminated'),
+                        'truncated': result.get('truncated'),
+                        'message': result.get('message'),
+                        'error': result.get('error'),
+                    }
+                else:
+                    # Single-shot mode result
+                    puzzle_obj['result'] = {
+                        'puzzle_id': result['puzzle_id'],
+                        'solved': result['solved'],
+                        'analysis': result.get('analysis'),
+                        'processing_time': result['processing_time'],
+                        'extracted_path': result.get('extracted_path'),
+                        'message': result.get('message'),
+                        'error': result.get('error'),
+                    }
                 f.write(json.dumps(puzzle_obj) + "\n")
 
         console.print(f"[green]💾 Results saved to {filename}[/]")
@@ -67,6 +83,7 @@ def save_results(results: List[Dict], filename: str) -> None:
 def load_results(filename: str) -> tuple[List[Dict], Set[str]]:
     """Load results from a JSONL or legacy JSON file.
     Returns a tuple (results_list, processed_ids_set).
+    Handles both single-shot and gym mode result formats.
     """
     if not os.path.exists(filename):
         return [], set()
@@ -84,16 +101,34 @@ def load_results(filename: str) -> tuple[List[Dict], Set[str]]:
                     obj = json.loads(line)
                     puzzle_data = {k: v for k, v in obj.items() if k != 'result'}
                     result_meta = obj.get('result', {})
-                    combined = {
-                        'puzzle_id': result_meta.get('puzzle_id', puzzle_data.get('id', 'unknown')),
-                        'puzzle_data': puzzle_data,
-                        'extracted_path': result_meta.get('extracted_path'),
-                        'solved': result_meta.get('solved', False),
-                        'analysis': result_meta.get('analysis', {}),
-                        'processing_time': result_meta.get('processing_time', 0.0),
-                        'message': result_meta.get('message'),
-                        'error': result_meta.get('error'),
-                    }
+                    
+                    # Check if this is gym mode (has 'steps_taken') or single-shot mode
+                    if 'steps_taken' in result_meta:
+                        # Gym mode result
+                        combined = {
+                            'puzzle_id': result_meta.get('puzzle_id', puzzle_data.get('id', 'unknown')),
+                            'puzzle_data': puzzle_data,
+                            'solved': result_meta.get('solved', False),
+                            'processing_time': result_meta.get('processing_time', 0.0),
+                            'steps_taken': result_meta.get('steps_taken'),
+                            'reward': result_meta.get('reward'),
+                            'terminated': result_meta.get('terminated'),
+                            'truncated': result_meta.get('truncated'),
+                            'message': result_meta.get('message'),
+                            'error': result_meta.get('error'),
+                        }
+                    else:
+                        # Single-shot mode result
+                        combined = {
+                            'puzzle_id': result_meta.get('puzzle_id', puzzle_data.get('id', 'unknown')),
+                            'puzzle_data': puzzle_data,
+                            'extracted_path': result_meta.get('extracted_path'),
+                            'solved': result_meta.get('solved', False),
+                            'analysis': result_meta.get('analysis', {}),
+                            'processing_time': result_meta.get('processing_time', 0.0),
+                            'message': result_meta.get('message'),
+                            'error': result_meta.get('error'),
+                        }
                     results.append(combined)
             processed_ids = {r['puzzle_id'] for r in results}
         else:
@@ -166,7 +201,45 @@ async def process_batch(client: AsyncOpenAI, batch_puzzles: List[tuple], model: 
     return processed_results
 
 
-async def process_dataset_async(dataset, client: AsyncOpenAI, model: str, temperature: float, batch_size: int, verbose: bool, results_file: str, skip_processed: Set[str], max_new: Optional[int] = None) -> List[Dict]:
+async def process_batch_step_by_step(client: AsyncOpenAI, batch_puzzles: List[tuple], model: str, temperature: float, verbose: bool) -> List[Dict]:
+    """Process a batch of puzzles concurrently using step-by-step gym mode"""
+    tasks = []
+    for puzzle_data, puzzle_index in batch_puzzles:
+        task = process_puzzle_step_by_step(client, puzzle_data, model, temperature, puzzle_index)
+        tasks.append(task)
+    
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    
+    # Handle any exceptions that occurred
+    processed_results = []
+    for i, result in enumerate(results):
+        if isinstance(result, Exception):
+            puzzle_data, puzzle_index = batch_puzzles[i]
+            puzzle_id = puzzle_data.get("id", f"idx_{puzzle_index}")
+            if verbose:
+                console.print(f"[red]❌ ERROR on puzzle {puzzle_id}: {str(result)}[/]")
+            continue
+        else:
+            processed_results.append(result)
+            
+            if verbose and result:
+                puzzle_id = result['puzzle_id']
+                solved = result['solved']
+                status_style = "green" if solved else "red"
+                status = "✅ SOLVED" if solved else "❌ FAILED"
+                puzzle_info = format_puzzle_info(result['puzzle_data'])
+                steps_taken = result.get('steps_taken', 0)
+                
+                console.print(f"[{status_style}]{status}[/] {puzzle_info} | Steps: {steps_taken} | Time: {result['processing_time']:.2f}s")
+                
+                if result.get('truncated'):
+                    console.print(f"   [yellow]⚠️  Truncated (max steps reached)[/]")
+                console.print()
+    
+    return processed_results
+
+
+async def process_dataset_async(dataset, client: AsyncOpenAI, model: str, temperature: float, batch_size: int, verbose: bool, results_file: str, skip_processed: Set[str], max_new: Optional[int] = None, gym_mode: bool = False) -> List[Dict]:
     """Process the dataset in batches with graceful shutdown support
     Only up to `max_new` unseen puzzles will be processed if specified.
     """
@@ -226,7 +299,10 @@ async def process_dataset_async(dataset, client: AsyncOpenAI, model: str, temper
             progress.update(task, description="[cyan]Processing batch...")
             
             # Launch batch processing as background task so we can refresh ETA countdown
-            batch_task = asyncio.create_task(process_batch(client, batch_puzzles, model, temperature, verbose))
+            if gym_mode:
+                batch_task = asyncio.create_task(process_batch_step_by_step(client, batch_puzzles, model, temperature, verbose))
+            else:
+                batch_task = asyncio.create_task(process_batch(client, batch_puzzles, model, temperature, verbose))
 
             # Periodically refresh ETA while the batch is running
             while not batch_task.done():
@@ -268,18 +344,19 @@ def save_tables_csv(results: List[Dict], filename_base: str) -> None:
     Two files are produced:
         <prefix>_stats.csv   – aggregated metrics
         <prefix>_details.csv – per-puzzle info
+    Handles both single-shot and gym mode result formats.
     """
+    if not results:
+        return
+        
     try:
+        # Detect mode: gym mode has 'steps_taken', single-shot has 'analysis'
+        is_gym_mode = 'steps_taken' in results[0]
+        
         # 1) Summary statistics -------------------------------------------------
         total = len(results)
         solved_count = sum(1 for r in results if r['solved'])
         success_rate = (solved_count / total * 100) if total else 0.0
-
-        valid_paths = sum(1 for r in results if r['analysis']['fully_valid_path'])
-        connected_paths = sum(1 for r in results if r['analysis']['connected_line'])
-        start_end_correct = sum(1 for r in results if r['analysis']['starts_at_start_ends_at_exit'])
-        non_intersecting = sum(1 for r in results if r['analysis']['non_intersecting_line'])
-        no_rule_crossing = sum(1 for r in results if r['analysis']['no_rule_crossing'])
 
         difficulty_counts = {lvl: 0 for lvl in range(1, 6)}
         difficulty_solved = {lvl: 0 for lvl in range(1, 6)}
@@ -290,9 +367,6 @@ def save_tables_csv(results: List[Dict], filename_base: str) -> None:
                 if r['solved']:
                     difficulty_solved[lvl] += 1
 
-        path_lengths = [len(r['extracted_path']) for r in results if r['extracted_path']]
-        avg_path_length = sum(path_lengths) / len(path_lengths) if path_lengths else 0
-
         processing_times = [r['processing_time'] for r in results]
         total_time = sum(processing_times)
         avg_time = total_time / total if total else 0
@@ -302,13 +376,47 @@ def save_tables_csv(results: List[Dict], filename_base: str) -> None:
             ("Correctly Solved", solved_count, f"{success_rate:.1f}%"),
             ("Failed", total - solved_count, f"{100 - success_rate:.1f}%"),
             ("", "", ""),
-            ("Fully Valid Paths", valid_paths, f"{valid_paths/total*100:.1f}%" if total else "0.0%"),
-            ("Connected Paths", connected_paths, f"{connected_paths/total*100:.1f}%" if total else "0.0%"),
-            ("Correct Start/End", start_end_correct, f"{start_end_correct/total*100:.1f}%" if total else "0.0%"),
-            ("Non-Intersecting", non_intersecting, f"{non_intersecting/total*100:.1f}%" if total else "0.0%"),
-            ("No Rule Violations", no_rule_crossing, f"{no_rule_crossing/total*100:.1f}%" if total else "0.0%"),
-            ("", "", ""),
         ]
+
+        if is_gym_mode:
+            # Gym mode stats
+            steps_list = [r.get('steps_taken', 0) for r in results if r.get('steps_taken')]
+            avg_steps = sum(steps_list) / len(steps_list) if steps_list else 0
+            truncated_count = sum(1 for r in results if r.get('truncated'))
+            
+            stats_rows.extend([
+                ("Avg Steps Taken", f"{avg_steps:.1f} steps", ""),
+                ("Min Steps", f"{min(steps_list) if steps_list else 0} steps", ""),
+                ("Max Steps", f"{max(steps_list) if steps_list else 0} steps", ""),
+                ("Truncated (max steps)", truncated_count, f"{truncated_count/total*100:.1f}%" if total else "0.0%"),
+                ("", "", ""),
+            ])
+        else:
+            # Single-shot mode stats
+            valid_paths = sum(1 for r in results if r.get('analysis', {}).get('fully_valid_path'))
+            connected_paths = sum(1 for r in results if r.get('analysis', {}).get('connected_line'))
+            start_end_correct = sum(1 for r in results if r.get('analysis', {}).get('starts_at_start_ends_at_exit'))
+            non_intersecting = sum(1 for r in results if r.get('analysis', {}).get('non_intersecting_line'))
+            no_rule_crossing = sum(1 for r in results if r.get('analysis', {}).get('no_rule_crossing'))
+            
+            stats_rows.extend([
+                ("Fully Valid Paths", valid_paths, f"{valid_paths/total*100:.1f}%" if total else "0.0%"),
+                ("Connected Paths", connected_paths, f"{connected_paths/total*100:.1f}%" if total else "0.0%"),
+                ("Correct Start/End", start_end_correct, f"{start_end_correct/total*100:.1f}%" if total else "0.0%"),
+                ("Non-Intersecting", non_intersecting, f"{non_intersecting/total*100:.1f}%" if total else "0.0%"),
+                ("No Rule Violations", no_rule_crossing, f"{no_rule_crossing/total*100:.1f}%" if total else "0.0%"),
+                ("", "", ""),
+            ])
+            
+            path_lengths = [len(r['extracted_path']) for r in results if r.get('extracted_path')]
+            avg_path_length = sum(path_lengths) / len(path_lengths) if path_lengths else 0
+            
+            stats_rows.extend([
+                ("Avg Path Length", f"{avg_path_length:.1f} steps", ""),
+                ("Min Path Length", f"{min(path_lengths) if path_lengths else 0} steps", ""),
+                ("Max Path Length", f"{max(path_lengths) if path_lengths else 0} steps", ""),
+                ("", "", ""),
+            ])
 
         # Difficulty rows
         for lvl in range(1, 6):
@@ -318,10 +426,6 @@ def save_tables_csv(results: List[Dict], filename_base: str) -> None:
             stats_rows.append((f"Difficulty {lvl} Solved", f"{solved_lvl}/{total_lvl}", f"{pct:.1f}%"))
 
         stats_rows.extend([
-            ("", "", ""),
-            ("Avg Path Length", f"{avg_path_length:.1f} steps", ""),
-            ("Min Path Length", f"{min(path_lengths) if path_lengths else 0} steps", ""),
-            ("Max Path Length", f"{max(path_lengths) if path_lengths else 0} steps", ""),
             ("", "", ""),
             ("Total Time", f"{total_time:.1f} seconds", ""),
             ("Avg Time per Puzzle", f"{avg_time:.2f} seconds", ""),
@@ -336,28 +440,39 @@ def save_tables_csv(results: List[Dict], filename_base: str) -> None:
         # 2) Detailed per-puzzle results --------------------------------------
         with open(f"{filename_base}_details.csv", "w", newline="") as f_det:
             writer = csv.writer(f_det)
-            writer.writerow(["Puzzle ID", "Difficulty", "Solved", "Path Length", "Time (s)", "Issues"])
-            for r in results:
-                puzzle_id = r['puzzle_id']
-                difficulty = r['puzzle_data'].get('difficulty_level', 'N/A')
-                solved_status = "PASS" if r['solved'] else "FAIL"
-                path_len = len(r['extracted_path']) if r['extracted_path'] else 0
-                time_taken = f"{r['processing_time']:.2f}"
+            
+            if is_gym_mode:
+                writer.writerow(["Puzzle ID", "Difficulty", "Solved", "Steps Taken", "Time (s)", "Truncated"])
+                for r in results:
+                    puzzle_id = r['puzzle_id']
+                    difficulty = r['puzzle_data'].get('difficulty_level', 'N/A')
+                    solved_status = "PASS" if r['solved'] else "FAIL"
+                    steps_taken = r.get('steps_taken', 0)
+                    time_taken = f"{r['processing_time']:.2f}"
+                    truncated = "Yes" if r.get('truncated') else "No"
+                    writer.writerow([puzzle_id, difficulty, solved_status, steps_taken, time_taken, truncated])
+            else:
+                writer.writerow(["Puzzle ID", "Difficulty", "Solved", "Path Length", "Time (s)", "Issues"])
+                for r in results:
+                    puzzle_id = r['puzzle_id']
+                    difficulty = r['puzzle_data'].get('difficulty_level', 'N/A')
+                    solved_status = "PASS" if r['solved'] else "FAIL"
+                    path_len = len(r['extracted_path']) if r.get('extracted_path') else 0
+                    time_taken = f"{r['processing_time']:.2f}"
 
-                issues = []
-                analysis = r.get('analysis', {})
-                if analysis and not analysis.get('fully_valid_path', True):
-                    if not analysis.get('starts_at_start_ends_at_exit', True):
-                        issues.append("start/end")
-                    if not analysis.get('connected_line', True):
-                        issues.append("disconnected")
-                    if not analysis.get('non_intersecting_line', True):
-                        issues.append("intersecting")
-                    if not analysis.get('no_rule_crossing', True):
-                        issues.append("rules")
-                issues_str = ", ".join(issues) if issues else "None"
-
-                writer.writerow([puzzle_id, difficulty, solved_status, path_len, time_taken, issues_str])
+                    issues = []
+                    analysis = r.get('analysis', {})
+                    if analysis and not analysis.get('fully_valid_path', True):
+                        if not analysis.get('starts_at_start_ends_at_exit', True):
+                            issues.append("start/end")
+                        if not analysis.get('connected_line', True):
+                            issues.append("disconnected")
+                        if not analysis.get('non_intersecting_line', True):
+                            issues.append("intersecting")
+                        if not analysis.get('no_rule_crossing', True):
+                            issues.append("rules")
+                    issues_str = ", ".join(issues) if issues else "None"
+                    writer.writerow([puzzle_id, difficulty, solved_status, path_len, time_taken, issues_str])
 
         console.print(f"[green]📑 CSV tables saved with prefix {filename_base}_*.csv[/]")
     except Exception as e:
@@ -434,6 +549,11 @@ def main() -> None:
         default=None,
         help="Process at most this many new puzzles before terminating"
     )
+    parser.add_argument(
+        "--gym",
+        action="store_true",
+        help="Use step-by-step gym mode instead of single-shot solving"
+    )
     
     args = parser.parse_args()
 
@@ -469,6 +589,7 @@ def main() -> None:
     config_table.add_row("Results File", results_file)
     config_table.add_row("Max New", str(args.max_new) if args.max_new else "All")
     config_table.add_row("Base URL", args.base_url)
+    config_table.add_row("Mode", "Gym (step-by-step)" if args.gym else "Single-shot")
     
     console.print(Panel(config_table, title="Configuration", style="blue"))
     console.print("[dim]💡 Press Ctrl+C to gracefully stop after current batch[/]")
@@ -481,7 +602,7 @@ def main() -> None:
     try:
         # Run async processing
         results = asyncio.run(process_dataset_async(
-            dataset, client, args.model, args.temperature, args.batch_size, args.verbose, results_file, skip_processed, args.max_new
+            dataset, client, args.model, args.temperature, args.batch_size, args.verbose, results_file, skip_processed, args.max_new, args.gym
         ))
         
         if shutdown_requested:
