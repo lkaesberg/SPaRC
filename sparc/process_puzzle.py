@@ -95,9 +95,38 @@ async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, mo
                 
                 reply = response.choices[0].message.content.strip()
                 all_messages.append(reply)
-                last_line = reply.splitlines()[-1].strip()
-                m = re.match(r"^(?:Final:\s*)?([0-3])$", last_line)
-                action = int(m.group(1))
+                
+                # Try to extract action, with retries if format is invalid
+                action = None
+                action_retries = 3
+                for action_attempt in range(action_retries):
+                    last_line = reply.splitlines()[-1].strip() if reply else ""
+                    m = re.match(r"^(?:Final:\s*)?([0-3])$", last_line)
+                    if m:
+                        action = int(m.group(1))
+                        break
+                    else:
+                        # Try to find any digit 0-3 in the last line as fallback
+                        fallback = re.search(r"[0-3]", last_line)
+                        if fallback:
+                            action = int(fallback.group(0))
+                            break
+                    
+                    if action_attempt < action_retries - 1:
+                        # Retry: ask for a valid action format
+                        messages.append({"role": "assistant", "content": reply})
+                        messages.append({"role": "user", "content": "Invalid format. Please respond with only: Final: <digit> where <digit> is 0 (right), 1 (up), 2 (left), or 3 (down)."})
+                        response = await client.chat.completions.create(
+                            model=model,
+                            messages=messages,
+                            temperature=temperature,
+                        )
+                        reply = response.choices[0].message.content.strip()
+                        all_messages.append(reply)
+                
+                if action is None:
+                    raise ValueError(f"Failed to get valid action after {action_retries} attempts. Last response: {reply[:200]}")
+                
                 obs, reward, terminated, truncated, info = env.step(action)
                 
                 messages.append({"role":"assistant","content": f"Final: {action}"})
