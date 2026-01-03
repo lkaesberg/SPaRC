@@ -557,11 +557,24 @@ def main() -> None:
         action="store_true",
         help="Use step-by-step gym mode instead of single-shot solving"
     )
+    parser.add_argument(
+        "--run-name",
+        type=str,
+        default=None,
+        help="Optional suffix to add to the output filename (e.g., 'experiment1' -> 'gpt-4_experiment1.jsonl')"
+    )
     
     args = parser.parse_args()
 
     # Determine results file: use provided name or model name, ensure .jsonl extension
-    base_name = args.results_file if args.results_file else args.model.replace('/', '_')
+    if args.results_file:
+        base_name = args.results_file
+    else:
+        base_name = args.model.replace('/', '_')
+        if args.gym:
+            base_name = f"{base_name}_gym"
+        if args.run_name:
+            base_name = f"{base_name}_{args.run_name}"
     results_file = base_name if base_name.endswith('.jsonl') else f"{base_name}.jsonl"
 
     # Header
@@ -593,6 +606,8 @@ def main() -> None:
     config_table.add_row("Max New", str(args.max_new) if args.max_new else "All")
     config_table.add_row("Base URL", args.base_url)
     config_table.add_row("Mode", "Gym (step-by-step)" if args.gym else "Single-shot")
+    if args.run_name:
+        config_table.add_row("Run Name", args.run_name)
     
     console.print(Panel(config_table, title="Configuration", style="blue"))
     console.print("[dim]💡 Press Ctrl+C to gracefully stop after current batch[/]")
