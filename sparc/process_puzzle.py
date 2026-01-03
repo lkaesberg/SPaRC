@@ -143,12 +143,40 @@ async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, mo
                 raise e
 
 def make_json_safe(obj, seen=None):
-    if seen is None: seen=set()
-    oid=id(obj)
-    if oid in seen: return None
+    """Convert numpy arrays and other non-JSON-serializable objects to JSON-safe types."""
+    if seen is None:
+        seen = set()
+    oid = id(obj)
+    if oid in seen:
+        return None
     seen.add(oid)
-    if isinstance(obj, np.ndarray): return obj.tolist()
-    if isinstance(obj, dict): return {k: make_json_safe(v,seen) for k,v in obj.items()}
-    if isinstance(obj,(list,tuple)): return [make_json_safe(v,seen) for v in obj]
-    if isinstance(obj,(int,float,str,bool)) or obj is None: return obj
+    
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    if isinstance(obj, np.integer):
+        return int(obj)
+    if isinstance(obj, np.floating):
+        return float(obj)
+    if isinstance(obj, np.bool_):
+        return bool(obj)
+    if isinstance(obj, dict):
+        # Convert both keys and values to JSON-safe types
+        return {_make_key_safe(k): make_json_safe(v, seen) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [make_json_safe(v, seen) for v in obj]
+    if isinstance(obj, (int, float, str, bool)) or obj is None:
+        return obj
     return str(obj)
+
+
+def _make_key_safe(key):
+    """Convert a dictionary key to a JSON-safe type."""
+    if isinstance(key, np.integer):
+        return int(key)
+    if isinstance(key, np.floating):
+        return float(key)
+    if isinstance(key, np.bool_):
+        return bool(key)
+    if isinstance(key, (int, float, str, bool)) or key is None:
+        return key
+    return str(key)
