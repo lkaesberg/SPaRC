@@ -114,6 +114,7 @@ async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, mo
                     
                     if action_attempt < action_retries - 1:
                         # Retry: ask for a valid action format
+                        console.print(f"[yellow]Invalid action format. Retrying...[/]")
                         messages.append({"role": "assistant", "content": reply})
                         messages.append({"role": "user", "content": "Invalid format. Please respond with only: Final: <digit> where <digit> is 0 (right), 1 (up), 2 (left), or 3 (down)."})
                         response = await client.chat.completions.create(
