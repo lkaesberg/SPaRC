@@ -75,18 +75,32 @@ async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, mo
     for attempt in range(max_retries + 1):
         try:
             max_steps = 100
-            env = gym.make("SPaRC-Gym", render_mode=None, traceback=False, observation = 'SPaRC', max_steps=100)
+            keep_turns = 4
+            
+            env = gym.make("SPaRC-Gym", render_mode=None, traceback=False, observation='SPaRC', max_steps=max_steps)
             options = {'puzzle_id': puzzle_id}
             obs, info = env.reset(options=options)
-            Keep_Turns = 4
+            
             reward = 0
             all_messages = []
-            steps = 0
-            messages=[{ "role": "system", "content": f"You are an expert at solving puzzles games. {generate_prompt(puzzle_data, step_by_step=True)}"}]
-            for step in range(max_steps+1):
-                steps += 1
-                user_payload = json.dumps(make_json_safe({'obs':obs,'info':info,'reward':reward}))
-                messages.append({"role":"user","content":user_payload})
+            all_actions = []
+            extracted_path = []
+            
+            # Record starting position
+            if 'agent_location' in info:
+                loc = info['agent_location']
+                extracted_path.append(tuple(loc) if isinstance(loc, list) else loc)
+            
+            messages = [{"role": "system", "content": generate_prompt_step_by_step()}]
+            
+            terminated = False
+            truncated = False
+            step = 0
+            
+            for step in range(max_steps + 1):
+                user_payload = json.dumps(make_json_safe({'obs': obs, 'info': info, 'reward': reward}))
+                messages.append({"role": "user", "content": user_payload})
+                
                 response = await client.chat.completions.create(
                     model=model,
                     messages=messages,
@@ -96,70 +110,53 @@ async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, mo
                 reply = response.choices[0].message.content.strip()
                 all_messages.append(reply)
                 
-                # Try to extract action, with retries if format is invalid
-                action = None
-                action_retries = 3
-                for action_attempt in range(action_retries):
-                    last_line = reply.splitlines()[-1].strip() if reply else ""
-                    m = re.match(r"^(?:Final:\s*)?([0-3])$", last_line)
-                    if m:
-                        action = int(m.group(1))
-                        break
-                    else:
-                        # Try to find any digit 0-3 in the last line as fallback
-                        fallback = re.search(r"[0-3]", last_line)
-                        if fallback:
-                            action = int(fallback.group(0))
-                            break
-                    
-                    if action_attempt < action_retries - 1:
-                        # Retry: ask for a valid action format
-                        console.print(f"[yellow]Invalid action format. Retrying...[/]")
-                        messages.append({"role": "assistant", "content": reply})
-                        messages.append({"role": "user", "content": "Invalid format. Please respond with only: Final: <digit> where <digit> is 0 (right), 1 (up), 2 (left), or 3 (down)."})
-                        response = await client.chat.completions.create(
-                            model=model,
-                            messages=messages,
-                            temperature=temperature,
-                        )
-                        reply = response.choices[0].message.content.strip()
-                        all_messages.append(reply)
+                # Parse action from last line
+                last_line = reply.splitlines()[-1].strip() if reply else ""
+                m = re.match(r"^(?:Final:\s*)?([0-3])$", last_line)
                 
-                if action is None:
-                    raise ValueError(f"Failed to get valid action after {action_retries} attempts. Last response: {reply[:200]}")
+                if not m:
+                    raise ValueError(f"Invalid model output, no 'Final: <0-3>' found. Last line: {last_line}")
                 
+                action = int(m.group(1))
+                all_actions.append(action)
                 obs, reward, terminated, truncated, info = env.step(action)
                 
-                messages.append({"role":"assistant","content": f"Final: {action}"})
+                # Record new position after the step
+                if 'agent_location' in info:
+                    loc = info['agent_location']
+                    extracted_path.append(tuple(loc) if isinstance(loc, list) else loc)
+                
+                # Append the action taken (not the raw reply) to maintain clean history
+                messages.append({"role": "assistant", "content": f"Final: {action}"})
+                
+                # Keep only system message + last N turns
                 system = messages[0]
-                tail = messages[-(Keep_Turns*2):]
+                tail = messages[-(keep_turns * 2):]
                 messages = [system] + tail
                 
                 if terminated or truncated:
                     break
-                
+            
             processing_time = time.time() - start_time
-            if reward == 1:
-                solved = True
-            else:
-                solved = False
-                
+            solved = reward == 1
+            
             return {
                 'puzzle_id': puzzle_id,
                 'puzzle_data': puzzle_data,
                 'solved': solved,
                 'processing_time': processing_time,
                 'message': all_messages,
+                'actions': all_actions,
+                'extracted_path': extracted_path,
                 'observation': obs,
                 'info': info,
                 'reward': reward,
-                'reached_end': terminated,  # Reached end location (doesn't mean solved)
-                'no_legal_actions': truncated,  # Ran out of legal moves before reaching end
-                'steps_taken': steps,
+                'reached_end': terminated,
+                'no_legal_actions': truncated,
+                'steps_taken': step + 1,
                 'error': None
             }
             
-        
         except Exception as e:
             if attempt < max_retries:
                 wait_time = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s
