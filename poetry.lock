@@ -2136,14 +2136,14 @@ files = [
 
 [[package]]
 name = "sparc-gym"
-version = "0.2.3"
+version = "0.2.4"
 description = ""
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "sparc_gym-0.2.3-py3-none-any.whl", hash = "sha256:2f0a45b2af8f462730519f1a2c42d970e06af5f8fb3b0168c797bc33fe755937"},
-    {file = "sparc_gym-0.2.3.tar.gz", hash = "sha256:2a745ac36204f2597cc83e882dc41967d007ef28f61bd73efde823ef7deab550"},
+    {file = "sparc_gym-0.2.4-py3-none-any.whl", hash = "sha256:700f339a553a5511ecfc41b07a3bcb6bc9059d6be16066373c062c60a6f41184"},
+    {file = "sparc_gym-0.2.4.tar.gz", hash = "sha256:8deb8fde2765df315de77fb351831e97156c06859850c4c2bf68524580dcb296"},
 ]
 
 [package.dependencies]
@@ -2553,4 +2553,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "6e685880fb816b4da1ded1ccfdcacae9bf8517bfde26dcc753ae1523115ab823"
+content-hash = "e6a4906a36b107525c6900cf887d89cc2f69c1e58d39d73e54702d7d460eae9b"
