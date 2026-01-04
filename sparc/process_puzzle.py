@@ -10,7 +10,7 @@ import numpy as np
 import json
 import re
 
-from sparc.prompt import generate_prompt
+from sparc.prompt import generate_prompt, generate_prompt_step_by_step
 from sparc.validation import extract_solution_path, validate_solution, analyze_path
 
 console = Console()
