@@ -138,7 +138,14 @@ def generate_prompt(puzzle_data: Dict) -> str:
     (0,0), (1,0), (2,0), (2,1), ...
     """
 
-def generate_prompt_step_by_step() -> str:
+def generate_prompt_step_by_step(puzzle_data: Dict) -> str:
+    polyshapes_str = ""
+    if "polyshapes" in puzzle_data and puzzle_data["polyshapes"]:
+        polyshapes_str = "POLYSHAPES DEFINITIONS:\n"
+        polyshapes_json = json.loads(puzzle_data["polyshapes"])
+        for shape_id, shape_def in polyshapes_json.items():
+            shape_def_str = '\n'.join(map(str, shape_def))
+            polyshapes_str += f"Shape {shape_id}:\n{shape_def_str}\n\n"
     return f"""
     You are an autonomous agent controlling a path‐finding puzzle solver.
     Your goal is to find a valid path (a continuous line) from the specified Start Node to the End Node on the provided grid, adhering to all puzzle rules.
@@ -204,7 +211,8 @@ def generate_prompt_step_by_step() -> str:
             (3): Path touches EXACTLY 3 edges of the triangle's cell.
             (4): Path touches EXACTLY 4 edges (fully surrounds) the triangle's cell.
 
-    Polyshape Definitions: Shapes are defined by 2D arrays where 1 indicates an occupied cell and 0 indicates an empty cell. {polyshapes}
+    Polyshape Definitions: Shapes are defined by 2D arrays where 1 indicates an occupied cell and 0 indicates an empty cell. 
+    {polyshapes_str}
 
     At each turn you'll receive current Information as JSON.
     Observation: The current state of the grid, including the path and any rule cells.

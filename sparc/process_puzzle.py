@@ -9,6 +9,7 @@ import SPaRC_Gym
 import numpy as np
 import json
 import re
+import traceback
 
 from sparc.prompt import generate_prompt, generate_prompt_step_by_step
 from sparc.validation import extract_solution_path, validate_solution, analyze_path
@@ -62,6 +63,7 @@ async def process_puzzle(client: AsyncOpenAI, puzzle_data: Dict, model: str, tem
                 continue
             else:
                 console.print(f"[red]❌ ERROR on puzzle {puzzle_id} after {max_retries} retries: {str(e)}[/]")
+                traceback.print_exc()
                 # Instead of exiting, we re-raise the exception so it can be handled by the batch processor
                 raise e
 
@@ -91,7 +93,7 @@ async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, mo
                 loc = info['agent_location']
                 extracted_path.append(tuple(loc) if isinstance(loc, list) else loc)
             
-            messages = [{"role": "system", "content": generate_prompt_step_by_step()}]
+            messages = [{"role": "system", "content": generate_prompt_step_by_step(puzzle_data)}]
             
             terminated = False
             truncated = False
@@ -166,6 +168,7 @@ async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, mo
                 continue
             else:
                 console.print(f"[red]❌ ERROR on puzzle {puzzle_id} after {max_retries} retries: {str(e)}[/]")
+                traceback.print_exc()
                 # Instead of exiting, we re-raise the exception so it can be handled by the batch processor
                 raise e
 
