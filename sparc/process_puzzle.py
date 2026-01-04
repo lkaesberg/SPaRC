@@ -75,7 +75,6 @@ async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, mo
     for attempt in range(max_retries + 1):
         try:
             max_steps = 100
-            keep_turns = 4
             
             env = gym.make("SPaRC-Gym", render_mode=None, traceback=False, observation='SPaRC', max_steps=max_steps)
             options = {'puzzle_id': puzzle_id}
@@ -91,7 +90,7 @@ async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, mo
                 loc = info['agent_location']
                 extracted_path.append(tuple(loc) if isinstance(loc, list) else loc)
             
-            messages = [{"role": "system", "content": generate_prompt_step_by_step()}]
+            system_message = {"role": "system", "content": generate_prompt_step_by_step()}
             
             terminated = False
             truncated = False
@@ -99,7 +98,10 @@ async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, mo
             
             for step in range(max_steps + 1):
                 user_payload = json.dumps(make_json_safe({'obs': obs, 'info': info, 'reward': reward}))
-                messages.append({"role": "user", "content": user_payload})
+                messages = [
+                    system_message,
+                    {"role": "user", "content": user_payload}
+                ]
                 
                 response = await client.chat.completions.create(
                     model=model,
@@ -125,14 +127,6 @@ async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, mo
                 if 'agent_location' in info:
                     loc = info['agent_location']
                     extracted_path.append(tuple(loc) if isinstance(loc, list) else loc)
-                
-                # Append the action taken (not the raw reply) to maintain clean history
-                messages.append({"role": "assistant", "content": f"Final: {action}"})
-                
-                # Keep only system message + last N turns
-                system = messages[0]
-                tail = messages[-(keep_turns * 2):]
-                messages = [system] + tail
                 
                 if terminated or truncated:
                     break
