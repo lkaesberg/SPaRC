@@ -9,6 +9,7 @@ import SPaRC_Gym
 import numpy as np
 import json
 import re
+import traceback
 
 from sparc.prompt import generate_prompt, generate_prompt_step_by_step
 from sparc.validation import extract_solution_path, validate_solution, analyze_path
@@ -62,6 +63,7 @@ async def process_puzzle(client: AsyncOpenAI, puzzle_data: Dict, model: str, tem
                 continue
             else:
                 console.print(f"[red]❌ ERROR on puzzle {puzzle_id} after {max_retries} retries: {str(e)}[/]")
+                traceback.print_exc()
                 # Instead of exiting, we re-raise the exception so it can be handled by the batch processor
                 raise e
 
@@ -90,7 +92,7 @@ async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, mo
                 loc = info['agent_location']
                 extracted_path.append(tuple(loc) if isinstance(loc, list) else loc)
             
-            system_message = {"role": "system", "content": generate_prompt_step_by_step()}
+            system_message = {"role": "system", "content": generate_prompt_step_by_step(puzzle_data)}
             
             terminated = False
             truncated = False
@@ -141,10 +143,10 @@ async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, mo
                 'processing_time': processing_time,
                 'message': all_messages,
                 'actions': all_actions,
-                'extracted_path': extracted_path,
-                'observation': obs,
-                'info': info,
-                'reward': reward,
+                'extracted_path': make_json_safe(extracted_path),
+                'observation': make_json_safe(obs),
+                'info': make_json_safe(info),
+                'reward': make_json_safe(reward),
                 'reached_end': terminated,
                 'no_legal_actions': truncated,
                 'steps_taken': step + 1,
@@ -160,6 +162,7 @@ async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, mo
                 continue
             else:
                 console.print(f"[red]❌ ERROR on puzzle {puzzle_id} after {max_retries} retries: {str(e)}[/]")
+                traceback.print_exc()
                 # Instead of exiting, we re-raise the exception so it can be handled by the batch processor
                 raise e
 
