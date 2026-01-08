@@ -203,11 +203,11 @@ async def process_batch(client: AsyncOpenAI, batch_puzzles: List[tuple], model: 
     return processed_results
 
 
-async def process_batch_step_by_step(client: AsyncOpenAI, batch_puzzles: List[tuple], model: str, temperature: float, verbose: bool) -> List[Dict]:
+async def process_batch_step_by_step(client: AsyncOpenAI, batch_puzzles: List[tuple], model: str, temperature: float, verbose: bool, gym_traceback: bool = False) -> List[Dict]:
     """Process a batch of puzzles concurrently using step-by-step gym mode"""
     tasks = []
     for puzzle_data, puzzle_index in batch_puzzles:
-        task = process_puzzle_step_by_step(client, puzzle_data, model, temperature, puzzle_index)
+        task = process_puzzle_step_by_step(client, puzzle_data, model, temperature, puzzle_index, gym_traceback)
         tasks.append(task)
     
     results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -241,7 +241,7 @@ async def process_batch_step_by_step(client: AsyncOpenAI, batch_puzzles: List[tu
     return processed_results
 
 
-async def process_dataset_async(dataset, client: AsyncOpenAI, model: str, temperature: float, batch_size: int, verbose: bool, results_file: str, skip_processed: Set[str], max_new: Optional[int] = None, gym_mode: bool = False) -> List[Dict]:
+async def process_dataset_async(dataset, client: AsyncOpenAI, model: str, temperature: float, batch_size: int, verbose: bool, results_file: str, skip_processed: Set[str], max_new: Optional[int] = None, gym_mode: bool = False, gym_traceback: bool = False) -> List[Dict]:
     """Process the dataset in batches with graceful shutdown support
     Only up to `max_new` unseen puzzles will be processed if specified.
     """
@@ -302,7 +302,7 @@ async def process_dataset_async(dataset, client: AsyncOpenAI, model: str, temper
             
             # Launch batch processing as background task so we can refresh ETA countdown
             if gym_mode:
-                batch_task = asyncio.create_task(process_batch_step_by_step(client, batch_puzzles, model, temperature, verbose))
+                batch_task = asyncio.create_task(process_batch_step_by_step(client, batch_puzzles, model, temperature, verbose, gym_traceback))
             else:
                 batch_task = asyncio.create_task(process_batch(client, batch_puzzles, model, temperature, verbose))
 
@@ -565,6 +565,11 @@ def main() -> None:
         default=None,
         help="Optional suffix to add to the output filename (e.g., 'experiment1' -> 'gpt-4_experiment1.jsonl')"
     )
+    parser.add_argument(
+        "--gym-traceback",
+        action="store_true",
+        help="Enable traceback visualization in gym mode (shows path history in observations)"
+    )
     
     args = parser.parse_args()
 
@@ -608,6 +613,8 @@ def main() -> None:
     config_table.add_row("Max New", str(args.max_new) if args.max_new else "All")
     config_table.add_row("Base URL", args.base_url)
     config_table.add_row("Mode", "Gym (step-by-step)" if args.gym else "Single-shot")
+    if args.gym:
+        config_table.add_row("Gym Traceback", "Enabled" if args.gym_traceback else "Disabled")
     if args.run_name:
         config_table.add_row("Run Name", args.run_name)
     
@@ -622,7 +629,7 @@ def main() -> None:
     try:
         # Run async processing
         results = asyncio.run(process_dataset_async(
-            dataset, client, args.model, args.temperature, args.batch_size, args.verbose, results_file, skip_processed, args.max_new, args.gym
+            dataset, client, args.model, args.temperature, args.batch_size, args.verbose, results_file, skip_processed, args.max_new, args.gym, args.gym_traceback
         ))
         
         if shutdown_requested:

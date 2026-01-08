@@ -137,9 +137,13 @@ sparc --api-key "your-key" [OPTIONS]
 | `--model` | `gpt-4` | Model name to evaluate |
 | `--temperature` | `1.0` | Generation temperature |
 | `--batch-size` | `5` | Number of concurrent requests |
-| `--results-file` | `sparc_results.json` | File to save results |
+| `--results-file` | `<model>.jsonl` | File to save results |
 | `--overwrite` | `False` | Ignore existing results and start over |
 | `--verbose` | `False` | Show detailed output for each puzzle |
+| `--max-new` | `None` | Process at most this many new puzzles |
+| `--gym` | `False` | Use step-by-step gym mode instead of single-shot |
+| `--gym-traceback` | `False` | Enable traceback visualization in gym mode |
+| `--run-name` | `None` | Suffix for output filename (e.g., `experiment1`) |
 
 ### Examples
 
@@ -158,6 +162,18 @@ sparc --api-key "sk-..." --model "gpt-4" --verbose
 
 # Custom results file
 sparc --api-key "sk-..." --model "claude-3" --results-file "claude_results.json"
+
+# Process only 10 new puzzles
+sparc --api-key "sk-..." --model "gpt-4" --max-new 10
+
+# Step-by-step gym mode (agent receives feedback after each move)
+sparc --api-key "sk-..." --model "gpt-4" --gym
+
+# Gym mode with traceback (shows path history in observations)
+sparc --api-key "sk-..." --model "gpt-4" --gym --gym-traceback
+
+# Named experiment run
+sparc --api-key "sk-..." --model "gpt-4" --run-name "experiment1"
 ```
 
 ### Core Functions

@@ -68,7 +68,7 @@ async def process_puzzle(client: AsyncOpenAI, puzzle_data: Dict, model: str, tem
                 raise e
 
 
-async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, model: str, temperature: float, puzzle_index: int) -> Dict:
+async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, model: str, temperature: float, puzzle_index: int, gym_traceback: bool = False) -> Dict:
     """(step-by-step) Process a single puzzle asynchronously with retry logic for connection errors"""
     start_time = time.time()
     puzzle_id = puzzle_data.get("id", f"idx_{puzzle_index}")
@@ -78,7 +78,7 @@ async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, mo
         try:
             max_steps = 100
             
-            env = gym.make("SPaRC-Gym", render_mode=None, traceback=False, observation='SPaRC', max_steps=max_steps)
+            env = gym.make("SPaRC-Gym", render_mode=None, traceback=gym_traceback, observation='SPaRC', max_steps=max_steps)
             options = {'puzzle_id': puzzle_id}
             obs, info = env.reset(options=options)
             
