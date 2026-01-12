@@ -16,6 +16,7 @@ from sparc.process_puzzle import process_puzzle, process_puzzle_step_by_step
 from sparc.tables import create_statistics_table, create_detailed_results_table
 from datasets import load_dataset
 from openai import AsyncOpenAI, APIConnectionError, APITimeoutError
+import httpx
 import aiohttp
 
 console = Console()
@@ -570,6 +571,12 @@ def main() -> None:
         action="store_true",
         help="Enable traceback visualization in gym mode (shows path history in observations)"
     )
+    parser.add_argument(
+        "--timeout",
+        type=float,
+        default=1200.0,
+        help="Request timeout in seconds for API calls (default: 1200 = 20 minutes)"
+    )
     
     args = parser.parse_args()
 
@@ -617,13 +624,18 @@ def main() -> None:
         config_table.add_row("Gym Traceback", "Enabled" if args.gym_traceback else "Disabled")
     if args.run_name:
         config_table.add_row("Run Name", args.run_name)
+    config_table.add_row("Timeout", f"{args.timeout}s")
     
     console.print(Panel(config_table, title="Configuration", style="blue"))
     console.print("[dim]💡 Press Ctrl+C to gracefully stop after current batch[/]")
 
+    # Configure timeout for larger models that may take longer to respond
+    timeout = httpx.Timeout(args.timeout, connect=30.0)
+    
     client = AsyncOpenAI(
         api_key=args.api_key,
         base_url=args.base_url,
+        timeout=timeout,
     )
     
     try:
