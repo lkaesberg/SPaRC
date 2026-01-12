@@ -11,7 +11,7 @@ import json
 import re
 import traceback
 
-from sparc.prompt import generate_prompt, generate_prompt_step_by_step
+from sparc.prompt import generate_prompt, generate_prompt_step_by_step, generate_prompt_step_by_step_traceback
 from sparc.validation import extract_solution_path, validate_solution, analyze_path
 
 console = Console()
@@ -92,7 +92,12 @@ async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, mo
                 loc = info['agent_location']
                 extracted_path.append(tuple(loc) if isinstance(loc, list) else loc)
             
-            system_message = {"role": "system", "content": generate_prompt_step_by_step(puzzle_data)}
+            # Use traceback prompt if traceback is enabled
+            if gym_traceback:
+                prompt_content = generate_prompt_step_by_step_traceback(puzzle_data)
+            else:
+                prompt_content = generate_prompt_step_by_step(puzzle_data)
+            system_message = {"role": "system", "content": prompt_content}
             
             terminated = False
             truncated = False
