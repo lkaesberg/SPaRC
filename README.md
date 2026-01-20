@@ -199,11 +199,17 @@ Contributions are welcome! Please feel free to submit pull requests or open issu
 If you use SPaRC in your research, please cite:
 
 ```bibtex
-@article{kaesberg2025sparc,
-  title     = {SPaRC: A Spatial Pathfinding Reasoning Challenge},
-  author    = {Kaesberg, Lars Benedikt and Wahle, Jan Philip and Ruas, Terry and Gipp, Bela},
-  year      = {2025},
-  url       = {https://arxiv.org/abs/2505.16686}
+@inproceedings{kaesberg-etal-2025-sparc,
+    title = "{SP}a{RC}: A Spatial Pathfinding Reasoning Challenge",
+    author = "Kaesberg, Lars Benedikt and Wahle, Jan Philip and Ruas, Terry and Gipp, Bela",
+    booktitle = "Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing",
+    month = nov,
+    year = "2025",
+    address = "Suzhou, China",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2025.emnlp-main.526/",
+    doi = "10.18653/v1/2025.emnlp-main.526",
+    pages = "10370--10401"
 }
 ```
 
