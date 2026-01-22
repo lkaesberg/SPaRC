@@ -338,3 +338,107 @@ def generate_prompt_step_by_step_traceback(puzzle_data: Dict) -> str:
     where <digit> is exactly one of 0=right, 1=up, 2=left, 3=down.
     No other output beyond your reasoning and that Final line.
     """
+
+
+def generate_prompt_step_by_step_visual(puzzle_data: Dict) -> str:
+    """Generate a visual step-by-step prompt for gym mode without traceback."""
+    polyshapes_str = ""
+    if "polyshapes" in puzzle_data and puzzle_data["polyshapes"]:
+        polyshapes_str = "POLYSHAPES DEFINITIONS:\n"
+        polyshapes_json = json.loads(puzzle_data["polyshapes"])
+        for shape_id, shape_def in polyshapes_json.items():
+            shape_def_str = '\n'.join(map(str, shape_def))
+            polyshapes_str += f"Shape {shape_id}:\n{shape_def_str}\n\n"
+    
+    return f"""You are an autonomous agent controlling a path-finding puzzle solver inspired by "The Witness" game.
+You will receive an IMAGE of the puzzle at each step showing your current progress.
+
+## Understanding the Visual Puzzle
+
+Looking at the puzzle image:
+- **Start Point**: A small circular connector on the edge of the grid (where the path begins)
+- **End Point**: A small circular connector on the edge of the grid (where you must reach)
+- **Green Cells**: Valid path cells you can move through
+- **Gray Border/Lines**: The grid structure
+- **Colored Squares**: Rule symbols that must be satisfied
+- **Colored Stars**: Must be paired with exactly one other element of the same color in the same region
+- **Triangles**: The path must touch a specific number of edges of that cell (number of triangles shown)
+- **Black Hexagon/Diamond**: Current position marker
+
+## Your Goal
+Navigate from the start to the end, drawing a continuous path that:
+1. Does NOT cross itself (no revisiting cells)
+2. Separates different colored squares into different regions
+3. Pairs each star with exactly one other same-colored element per region
+4. Touches the correct number of edges for triangle cells
+
+## Actions
+You can move in 4 directions:
+- **0**: Move UP
+- **1**: Move RIGHT  
+- **2**: Move DOWN
+- **3**: Move LEFT
+
+{polyshapes_str}
+
+## How to Respond
+Look at the current puzzle image showing your path progress. Analyze which direction leads toward the exit while following the puzzle rules.
+
+You MAY think step-by-step, but you MUST end your response with:
+Final: <digit>
+
+Where <digit> is exactly one of 0, 1, 2, or 3.
+"""
+
+
+def generate_prompt_step_by_step_visual_traceback(puzzle_data: Dict) -> str:
+    """Generate a visual step-by-step prompt for gym mode with traceback enabled."""
+    polyshapes_str = ""
+    if "polyshapes" in puzzle_data and puzzle_data["polyshapes"]:
+        polyshapes_str = "POLYSHAPES DEFINITIONS:\n"
+        polyshapes_json = json.loads(puzzle_data["polyshapes"])
+        for shape_id, shape_def in polyshapes_json.items():
+            shape_def_str = '\n'.join(map(str, shape_def))
+            polyshapes_str += f"Shape {shape_id}:\n{shape_def_str}\n\n"
+    
+    return f"""You are an autonomous agent controlling a path-finding puzzle solver inspired by "The Witness" game.
+You will receive an IMAGE of the puzzle at each step showing your current progress.
+
+## Understanding the Visual Puzzle
+
+Looking at the puzzle image:
+- **Start Point**: A small circular connector on the edge of the grid (where the path begins)
+- **End Point**: A small circular connector on the edge of the grid (where you must reach)
+- **Green Cells**: Valid path cells you can move through
+- **Gray Border/Lines**: The grid structure
+- **Colored Squares**: Rule symbols that must be satisfied
+- **Colored Stars**: Must be paired with exactly one other element of the same color in the same region
+- **Triangles**: The path must touch a specific number of edges of that cell (number of triangles shown)
+- **Black Hexagon/Diamond**: Current position marker
+- **Path Line**: Shows where you have already traveled
+
+## Your Goal
+Navigate from the start to the end, drawing a continuous path that:
+1. You CAN trace back along your existing path to undo moves
+2. You CANNOT cross your path at a new point (only retrace backwards)
+3. Separates different colored squares into different regions
+4. Pairs each star with exactly one other same-colored element per region
+5. Touches the correct number of edges for triangle cells
+
+## Actions
+You can move in 4 directions:
+- **0**: Move UP
+- **1**: Move RIGHT  
+- **2**: Move DOWN
+- **3**: Move LEFT
+
+{polyshapes_str}
+
+## How to Respond
+Look at the current puzzle image showing your path progress. Analyze which direction leads toward the exit while following the puzzle rules. You can backtrack if needed.
+
+You MAY think step-by-step, but you MUST end your response with:
+Final: <digit>
+
+Where <digit> is exactly one of 0, 1, 2, or 3.
+"""
