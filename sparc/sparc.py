@@ -14,6 +14,7 @@ from rich.panel import Panel
 from rich import box
 from sparc.process_puzzle import process_puzzle, process_puzzle_step_by_step, process_puzzle_visual, process_puzzle_step_by_step_visual
 from sparc.tables import create_statistics_table, create_detailed_results_table
+from sparc.prompt import AVAILABLE_PROMPTS, auto_detect_prompt
 from datasets import load_dataset
 from openai import AsyncOpenAI, APIConnectionError, APITimeoutError
 import httpx
@@ -152,14 +153,14 @@ def load_results(filename: str) -> tuple[List[Dict], Set[str]]:
 
 
 
-async def process_batch(client: AsyncOpenAI, batch_puzzles: List[tuple], model: str, temperature: float, verbose: bool, visual: bool = False, plot_type: str = "path_cell_annotated", prompt_type: str = "prompt_engineering") -> List[Dict]:
+async def process_batch(client: AsyncOpenAI, batch_puzzles: List[tuple], model: str, temperature: float, verbose: bool, visual: bool = False, plot_type: str = "path_cell_annotated", prompt_name: str = "single_shot") -> List[Dict]:
     """Process a batch of puzzles concurrently"""
     tasks = []
     for puzzle_data, puzzle_index in batch_puzzles:
         if visual:
-            task = process_puzzle_visual(client, puzzle_data, model, temperature, puzzle_index, plot_type, prompt_type)
+            task = process_puzzle_visual(client, puzzle_data, model, temperature, puzzle_index, plot_type, prompt_name)
         else:
-            task = process_puzzle(client, puzzle_data, model, temperature, puzzle_index)
+            task = process_puzzle(client, puzzle_data, model, temperature, puzzle_index, prompt_name)
         tasks.append(task)
     
     results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -207,14 +208,14 @@ async def process_batch(client: AsyncOpenAI, batch_puzzles: List[tuple], model: 
     return processed_results
 
 
-async def process_batch_step_by_step(client: AsyncOpenAI, batch_puzzles: List[tuple], model: str, temperature: float, verbose: bool, gym_traceback: bool = False, visual: bool = False, plot_type: str = "path_cell_annotated", prompt_type: str = "prompt_engineering") -> List[Dict]:
+async def process_batch_step_by_step(client: AsyncOpenAI, batch_puzzles: List[tuple], model: str, temperature: float, verbose: bool, gym_traceback: bool = False, visual: bool = False, plot_type: str = "path_cell_annotated", prompt_name: str = None) -> List[Dict]:
     """Process a batch of puzzles concurrently using step-by-step gym mode"""
     tasks = []
     for puzzle_data, puzzle_index in batch_puzzles:
         if visual:
-            task = process_puzzle_step_by_step_visual(client, puzzle_data, model, temperature, puzzle_index, gym_traceback, plot_type, prompt_type)
+            task = process_puzzle_step_by_step_visual(client, puzzle_data, model, temperature, puzzle_index, gym_traceback, plot_type, prompt_name)
         else:
-            task = process_puzzle_step_by_step(client, puzzle_data, model, temperature, puzzle_index, gym_traceback)
+            task = process_puzzle_step_by_step(client, puzzle_data, model, temperature, puzzle_index, gym_traceback, prompt_name)
         tasks.append(task)
     
     results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -248,7 +249,7 @@ async def process_batch_step_by_step(client: AsyncOpenAI, batch_puzzles: List[tu
     return processed_results
 
 
-async def process_dataset_async(dataset, client: AsyncOpenAI, model: str, temperature: float, batch_size: int, verbose: bool, results_file: str, skip_processed: Set[str], max_new: Optional[int] = None, gym_mode: bool = False, gym_traceback: bool = False, visual: bool = False, plot_type: str = "path_cell_annotated", prompt_type: str = "prompt_engineering") -> List[Dict]:
+async def process_dataset_async(dataset, client: AsyncOpenAI, model: str, temperature: float, batch_size: int, verbose: bool, results_file: str, skip_processed: Set[str], max_new: Optional[int] = None, gym_mode: bool = False, gym_traceback: bool = False, visual: bool = False, plot_type: str = "path_cell_annotated", prompt_name: str = "single_shot") -> List[Dict]:
     """Process the dataset in batches with graceful shutdown support
     Only up to `max_new` unseen puzzles will be processed if specified.
     """
@@ -309,9 +310,9 @@ async def process_dataset_async(dataset, client: AsyncOpenAI, model: str, temper
             
             # Launch batch processing as background task so we can refresh ETA countdown
             if gym_mode:
-                batch_task = asyncio.create_task(process_batch_step_by_step(client, batch_puzzles, model, temperature, verbose, gym_traceback, visual, plot_type, prompt_type))
+                batch_task = asyncio.create_task(process_batch_step_by_step(client, batch_puzzles, model, temperature, verbose, gym_traceback, visual, plot_type, prompt_name))
             else:
-                batch_task = asyncio.create_task(process_batch(client, batch_puzzles, model, temperature, verbose, visual, plot_type, prompt_type))
+                batch_task = asyncio.create_task(process_batch(client, batch_puzzles, model, temperature, verbose, visual, plot_type, prompt_name))
 
             # Periodically refresh ETA while the batch is running
             while not batch_task.done():
@@ -596,14 +597,18 @@ def main() -> None:
         help="Plot type for visual mode (default: path_cell_annotated)"
     )
     parser.add_argument(
-        "--prompt-type",
+        "--prompt",
         type=str,
-        default="prompt_engineering",
-        choices=["default_tr", "default_no_tr", "prompt_engineering"],
-        help="Prompt type for visual mode (default: prompt_engineering)"
+        default=None,
+        choices=AVAILABLE_PROMPTS,
+        help=f"Prompt mode to use. If not specified, auto-detects based on --gym, --visual, and --gym-traceback. Available: {', '.join(AVAILABLE_PROMPTS)}"
     )
     
     args = parser.parse_args()
+
+    # Auto-detect prompt if not specified
+    if args.prompt is None:
+        args.prompt = auto_detect_prompt(args.gym, args.visual, args.gym_traceback)
 
     # Determine results file: use provided name or model name, ensure .jsonl extension
     if args.results_file:
@@ -650,11 +655,11 @@ def main() -> None:
     if args.visual:
         mode_str += " + Visual"
     config_table.add_row("Mode", mode_str)
+    config_table.add_row("Prompt", args.prompt)
     if args.gym:
         config_table.add_row("Gym Traceback", "Enabled" if args.gym_traceback else "Disabled")
     if args.visual:
         config_table.add_row("Plot Type", args.plot_type)
-        config_table.add_row("Prompt Type", args.prompt_type)
     if args.run_name:
         config_table.add_row("Run Name", args.run_name)
     config_table.add_row("Timeout", f"{args.timeout}s")
@@ -674,7 +679,7 @@ def main() -> None:
     try:
         # Run async processing
         results = asyncio.run(process_dataset_async(
-            dataset, client, args.model, args.temperature, args.batch_size, args.verbose, results_file, skip_processed, args.max_new, args.gym, args.gym_traceback, args.visual, args.plot_type, args.prompt_type
+            dataset, client, args.model, args.temperature, args.batch_size, args.verbose, results_file, skip_processed, args.max_new, args.gym, args.gym_traceback, args.visual, args.plot_type, args.prompt
         ))
         
         if shutdown_requested:

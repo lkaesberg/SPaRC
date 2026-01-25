@@ -11,15 +11,14 @@ import json
 import re
 import traceback
 
-from sparc.prompt import generate_prompt, generate_prompt_step_by_step, generate_prompt_step_by_step_traceback, generate_prompt_step_by_step_visual, generate_prompt_step_by_step_visual_traceback
+from sparc.prompt import generate_prompt, generate_prompt_step_by_step, generate_prompt_step_by_step_traceback, generate_prompt_step_by_step_visual, generate_prompt_step_by_step_visual_traceback, get_prompt, AVAILABLE_PROMPTS
 from sparc.validation import extract_solution_path, validate_solution, analyze_path
 
 from sparc_visualization.plot import get_puzzle_image
-from sparc_visualization.prompt import generate_prompt as generate_visual_prompt
 
 console = Console()
 
-async def process_puzzle(client: AsyncOpenAI, puzzle_data: Dict, model: str, temperature: float, puzzle_index: int) -> Dict:
+async def process_puzzle(client: AsyncOpenAI, puzzle_data: Dict, model: str, temperature: float, puzzle_index: int, prompt_name: str = "single_shot") -> Dict:
     """Process a single puzzle asynchronously with retry logic for connection errors"""
     start_time = time.time()
     puzzle_id = puzzle_data.get("id", f"idx_{puzzle_index}")
@@ -27,14 +26,17 @@ async def process_puzzle(client: AsyncOpenAI, puzzle_data: Dict, model: str, tem
     
     for attempt in range(max_retries + 1):
         try:
+            # Get the prompt dict with system and user messages
+            prompt_dict = get_prompt(prompt_name, puzzle_data)
+            
             response = await client.chat.completions.create(
                 model=model,
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are an expert at solving puzzles games.",
+                        "content": prompt_dict["system"],
                     },
-                    {"role": "user", "content": generate_prompt(puzzle_data)},
+                    {"role": "user", "content": prompt_dict["user"]},
                 ],
                 temperature=temperature,
             )
@@ -73,7 +75,7 @@ async def process_puzzle(client: AsyncOpenAI, puzzle_data: Dict, model: str, tem
                 raise e
 
 
-async def process_puzzle_visual(client: AsyncOpenAI, puzzle_data: Dict, model: str, temperature: float, puzzle_index: int, plot_type: str = "path_cell_annotated", prompt_type: str = "prompt_engineering") -> Dict:
+async def process_puzzle_visual(client: AsyncOpenAI, puzzle_data: Dict, model: str, temperature: float, puzzle_index: int, plot_type: str = "path_cell_annotated", prompt_name: str = "single_shot_visual") -> Dict:
     """Process a single puzzle asynchronously using visual representation"""
     start_time = time.time()
     puzzle_id = puzzle_data.get("id", f"idx_{puzzle_index}")
@@ -83,13 +85,15 @@ async def process_puzzle_visual(client: AsyncOpenAI, puzzle_data: Dict, model: s
         try:
             # Generate visual representation
             b64_image = get_puzzle_image(puzzle_data, plot_type=plot_type, base_64_image=True)
-            text_prompt = generate_visual_prompt(puzzle_data, plot_type, prompt_type)
+            
+            # Get the prompt dict with system and user messages
+            prompt_dict = get_prompt(prompt_name, puzzle_data)
             
             # Create message with image
             messages = [
                 {
                     "role": "system",
-                    "content": "You are an expert at solving visual puzzles.",
+                    "content": prompt_dict["system"],
                 },
                 {
                     "role": "user",
@@ -102,7 +106,7 @@ async def process_puzzle_visual(client: AsyncOpenAI, puzzle_data: Dict, model: s
                         },
                         {
                             "type": "text",
-                            "text": text_prompt
+                            "text": prompt_dict["user"]
                         }
                     ]
                 }
@@ -133,7 +137,6 @@ async def process_puzzle_visual(client: AsyncOpenAI, puzzle_data: Dict, model: s
                 'message': message,
                 'visual_mode': True,
                 'plot_type': plot_type,
-                'prompt_type': prompt_type,
                 'error': None
             }
             
@@ -150,7 +153,7 @@ async def process_puzzle_visual(client: AsyncOpenAI, puzzle_data: Dict, model: s
                 raise e
 
 
-async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, model: str, temperature: float, puzzle_index: int, gym_traceback: bool = False) -> Dict:
+async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, model: str, temperature: float, puzzle_index: int, gym_traceback: bool = False, prompt_name: str = None) -> Dict:
     """(step-by-step) Process a single puzzle asynchronously with retry logic for connection errors"""
     start_time = time.time()
     puzzle_id = puzzle_data.get("id", f"idx_{puzzle_index}")
@@ -169,17 +172,18 @@ async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, mo
             all_actions = []
             extracted_path = []
             
-            # Record starting position (gym returns (y, x), we store as (x, y))
+            # Record starting position (gym now returns (x, y))
             if 'agent_location' in info:
                 loc = info['agent_location']
-                extracted_path.append((loc[1], loc[0]))
+                extracted_path.append((loc[0], loc[1]))
             
-            # Use traceback prompt if traceback is enabled
-            if gym_traceback:
-                prompt_content = generate_prompt_step_by_step_traceback(puzzle_data)
-            else:
-                prompt_content = generate_prompt_step_by_step(puzzle_data)
-            system_message = {"role": "system", "content": prompt_content}
+            # Use provided prompt_name or auto-select based on traceback
+            if prompt_name is None:
+                prompt_name = "gym_step_traceback" if gym_traceback else "gym_step"
+            
+            # Get the prompt dict with system message
+            prompt_dict = get_prompt(prompt_name, puzzle_data)
+            system_message = {"role": "system", "content": prompt_dict["system"]}
             
             terminated = False
             truncated = False
@@ -208,17 +212,23 @@ async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, mo
                 last_line = reply.splitlines()[-1].strip() if reply else ""
                 m = re.match(r"^(?:Final:\s*)?([0-3])$", last_line)
                 
+                # Fallback: if there's exactly one digit 0-3 in the last line, use that
                 if not m:
-                    raise ValueError(f"Invalid model output, no 'Final: <0-3>' found. Last line: {last_line}")
+                    digits = re.findall(r'[0-3]', last_line)
+                    if len(digits) == 1:
+                        action = int(digits[0])
+                    else:
+                        raise ValueError(f"Invalid model output, no 'Final: <0-3>' found. Last line: {last_line}")
+                else:
+                    action = int(m.group(1))
                 
-                action = int(m.group(1))
                 all_actions.append(action)
                 obs, reward, terminated, truncated, info = env.step(action)
                 
-                # Record new position after the step
+                # Record new position after the step (gym now returns (x, y))
                 if 'agent_location' in info:
                     loc = info['agent_location']
-                    extracted_path.append((loc[1], loc[0]))
+                    extracted_path.append((loc[0], loc[1]))
                 
                 if terminated or truncated:
                     break
@@ -256,7 +266,7 @@ async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, mo
                 # Instead of exiting, we re-raise the exception so it can be handled by the batch processor
                 raise e
 
-async def process_puzzle_step_by_step_visual(client: AsyncOpenAI, puzzle_data: Dict, model: str, temperature: float, puzzle_index: int, gym_traceback: bool = False, plot_type: str = "path_cell_annotated", prompt_type: str = "prompt_engineering") -> Dict:
+async def process_puzzle_step_by_step_visual(client: AsyncOpenAI, puzzle_data: Dict, model: str, temperature: float, puzzle_index: int, gym_traceback: bool = False, plot_type: str = "path_cell_annotated", prompt_name: str = None) -> Dict:
     """(step-by-step visual) Process a single puzzle using visual representations at each step"""
     start_time = time.time()
     puzzle_id = puzzle_data.get("id", f"idx_{puzzle_index}")
@@ -266,7 +276,7 @@ async def process_puzzle_step_by_step_visual(client: AsyncOpenAI, puzzle_data: D
         try:
             max_steps = 100
             
-            env = gym.make("SPaRC-Gym", render_mode="human", traceback=gym_traceback, observation='SPaRC', max_steps=max_steps)
+            env = gym.make("SPaRC-Gym", render_mode=None, traceback=gym_traceback, observation='SPaRC', max_steps=max_steps)
             options = {'puzzle_id': puzzle_id}
             obs, info = env.reset(options=options)
             
@@ -275,18 +285,18 @@ async def process_puzzle_step_by_step_visual(client: AsyncOpenAI, puzzle_data: D
             all_actions = []
             extracted_path = []
             
-            # Record starting position (gym returns (y, x), we store as (x, y))
+            # Record starting position (gym now returns (x, y))
             if 'agent_location' in info:
                 loc = info['agent_location']
-                extracted_path.append((loc[1], loc[0]))
+                extracted_path.append((loc[0], loc[1]))
             
-            # Generate visual prompt for step-by-step mode
-            if gym_traceback:
-                visual_prompt = generate_prompt_step_by_step_visual_traceback(puzzle_data)
-            else:
-                visual_prompt = generate_prompt_step_by_step_visual(puzzle_data)
+            # Use provided prompt_name or auto-select based on traceback
+            if prompt_name is None:
+                prompt_name = "gym_visual_traceback" if gym_traceback else "gym_visual"
             
-            system_message = {"role": "system", "content": visual_prompt}
+            # Get the prompt dict with system message
+            prompt_dict = get_prompt(prompt_name, puzzle_data)
+            system_message = {"role": "system", "content": prompt_dict["system"]}
             
             terminated = False
             truncated = False
@@ -294,17 +304,14 @@ async def process_puzzle_step_by_step_visual(client: AsyncOpenAI, puzzle_data: D
             
             for step in range(max_steps + 1):
                 # Generate current state image with path traced so far
-                # Note: agent_location from gym is (y, x), so we swap to (x, y) for the image
                 current_path = [{"x": p[0], "y": p[1]} for p in extracted_path]
                 b64_image = get_puzzle_image(puzzle_data, plot_type=plot_type, base_64_image=True, path=current_path if current_path else None)
                 
-                # Create simple observation text for visual mode
+                # Create simple observation text for visual mode (gym now returns (x, y))
                 agent_loc = info.get('agent_location', 'unknown')
-                # Convert from (y, x) to (x, y) for display
-                agent_loc = (agent_loc[1], agent_loc[0])
 
                 legal_actions = info.get('legal_actions', [])
-                action_names = {0: 'UP', 1: 'RIGHT', 2: 'DOWN', 3: 'LEFT'}
+                action_names = {0: 'RIGHT', 1: 'UP', 2: 'LEFT', 3: 'DOWN'}
                 legal_str = ', '.join([f"{a}={action_names.get(a, '?')}" for a in legal_actions])
                 obs_text = f"Step {step + 1} | Position: {agent_loc} | Legal moves: [{legal_str}]"
                 
@@ -343,17 +350,23 @@ async def process_puzzle_step_by_step_visual(client: AsyncOpenAI, puzzle_data: D
                 last_line = reply.splitlines()[-1].strip() if reply else ""
                 m = re.match(r"^(?:Final:\s*)?([0-3])$", last_line)
                 
+                # Fallback: if there's exactly one digit 0-3 in the last line, use that
                 if not m:
-                    raise ValueError(f"Invalid model output, no 'Final: <0-3>' found. Last line: {last_line}")
+                    digits = re.findall(r'[0-3]', last_line)
+                    if len(digits) == 1:
+                        action = int(digits[0])
+                    else:
+                        raise ValueError(f"Invalid model output, no 'Final: <0-3>' found. Last line: {last_line}")
+                else:
+                    action = int(m.group(1))
                 
-                action = int(m.group(1))
                 all_actions.append(action)
                 obs, reward, terminated, truncated, info = env.step(action)
                 
-                # Record new position after the step
+                # Record new position after the step (gym now returns (x, y))
                 if 'agent_location' in info:
                     loc = info['agent_location']
-                    extracted_path.append((loc[1], loc[0]))
+                    extracted_path.append((loc[0], loc[1]))
                 
                 if terminated or truncated:
                     break
@@ -377,7 +390,6 @@ async def process_puzzle_step_by_step_visual(client: AsyncOpenAI, puzzle_data: D
                 'steps_taken': step + 1,
                 'visual_mode': True,
                 'plot_type': plot_type,
-                'prompt_type': prompt_type,
                 'error': None
             }
             
