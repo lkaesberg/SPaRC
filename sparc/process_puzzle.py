@@ -435,29 +435,29 @@ Where <digit> is exactly one of 0=RIGHT, 1=UP, 2=LEFT, 3=DOWN."""
 
 
 def make_json_safe(obj, seen=None):
-    """Convert numpy arrays and other non-JSON-serializable objects to JSON-safe types."""
     if seen is None:
         seen = set()
+    if obj is None or isinstance(obj, (bool, int, float, str)):
+        return obj
+    if isinstance(obj, np.generic):
+        return obj.item()
     oid = id(obj)
     if oid in seen:
         return None
     seen.add(oid)
-    
     if isinstance(obj, np.ndarray):
         return obj.tolist()
-    if isinstance(obj, np.integer):
-        return int(obj)
-    if isinstance(obj, np.floating):
-        return float(obj)
-    if isinstance(obj, np.bool_):
-        return bool(obj)
     if isinstance(obj, dict):
-        # Convert both keys and values to JSON-safe types
-        return {_make_key_safe(k): make_json_safe(v, seen) for k, v in obj.items()}
+        safe = {}
+        for k, v in obj.items():
+            if isinstance(k, np.generic):
+                k = k.item()
+            elif not isinstance(k, (str, int, float, bool)) and k is not None:
+                k = str(k)
+            safe[k] = make_json_safe(v, seen)
+        return safe
     if isinstance(obj, (list, tuple)):
         return [make_json_safe(v, seen) for v in obj]
-    if isinstance(obj, (int, float, str, bool)) or obj is None:
-        return obj
     return str(obj)
 
 
