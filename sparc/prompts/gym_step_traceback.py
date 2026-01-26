@@ -100,28 +100,11 @@ def get_prompt(puzzle_data: Dict) -> Dict:
     Polyshape Definitions: Shapes are defined by 2D arrays where 1 indicates an occupied cell and 0 indicates an empty cell. 
     {polyshapes_str}
 
-    At each turn you'll receive current Information as JSON.
-    Observation: The current state of the grid, including the path and any rule cells.
-    The Observation is a json string representation:
-    Example observation: [["+","+","+","+","+","G","V"],["+","N",".","*-K","+","N","V"],["V","V","V","V","V","V","V"],["L","N","+","*-K","+","N","+"],["+",".","+","+","+","+","+"]]
-
-    Info: Additional information about the puzzle, including:
-    solution_count: The number of valid solutions for the current puzzle.
-    difficulty: The difficulty level of the puzzle, ranging from 1 (easy) to 5 (hard).
-    grid_x_size: The width of the grid.
-    grid_y_size: The height of the grid.
-    legal_actions: A list of legal actions you can take, represented as integers (0=right, 1=up, 2=left, 3=down).
-    current_step: The current step number in the episode.
-    agent_location: The current location of the agent in the grid.
-    Rewards: A dictionary containing the normal reward and the outcome reward at the current step.
-    rule_status: A dictionary indicating the status of each rule type (e.g., whether all squares are correctly grouped by color).
-
-    Reward: The current reward.
-
-    You MAY think step‐by‐step (feel free to "<think>…"), but you MUST end with:
-    Final: <digit>
-    where <digit> is exactly one of 0=right, 1=up, 2=left, 3=down.
-    No other output beyond your reasoning and that Final line.
+    At each turn you'll receive the current state:
+    - Step: The current step number
+    - Current Position: Your current (x, y) location
+    - Legal Actions: Available moves with format [digit=DIRECTION, ...]
+    - Grid State: The current grid showing your path progress
     """
 
     return {

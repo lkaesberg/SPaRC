@@ -190,7 +190,30 @@ async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, mo
             step = 0
             
             for step in range(max_steps + 1):
-                user_payload = json.dumps(make_json_safe({'obs': obs, 'info': info, 'reward': reward}))
+                # Build clean observation for LLM (only inference-relevant info)
+                agent_loc = info.get('agent_location', 'unknown')
+                legal_actions = info.get('legal_actions', [])
+                grid_size = (info.get('grid_x_size', 0), info.get('grid_y_size', 0))
+                
+                action_names = {0: 'RIGHT', 1: 'UP', 2: 'LEFT', 3: 'DOWN'}
+                legal_str = ', '.join([f"{a}={action_names.get(a, '?')}" for a in legal_actions])
+                
+                # Convert observation grid to clean string representation
+                # obs is a JSON string of a 2D array
+                obs_grid = json.loads(obs)
+                obs_str = '\n'.join([str(row) for row in obs_grid])
+                
+                user_payload = f"""Step: {step + 1}
+Current Position: {agent_loc}
+Legal Actions: [{legal_str}]
+
+Grid State:
+{obs_str}
+
+You MAY think step-by-step, but you MUST end your response with:
+Final: <digit>
+Where <digit> is exactly one of 0=RIGHT, 1=UP, 2=LEFT, 3=DOWN."""
+                
                 messages = [
                     system_message,
                     {"role": "user", "content": user_payload}
@@ -207,18 +230,18 @@ async def process_puzzle_step_by_step(client: AsyncOpenAI, puzzle_data: Dict, mo
                     raise ValueError("API returned empty response (content is None)")
                 reply = content.strip()
                 all_messages.append(reply)
+                reply = reply.split("</think>")[-1].strip()  # Remove any preceding think tags
                 
-                # Parse action from last line
-                last_line = reply.splitlines()[-1].strip() if reply else ""
-                m = re.match(r"^(?:Final:\s*)?([0-3])$", last_line)
+                # Parse action - search for "Final: <digit>" anywhere in response
+                m = re.search(r'Final:\s*([0-3])', reply, re.IGNORECASE)
                 
-                # Fallback: if there's exactly one digit 0-3 in the last line, use that
                 if not m:
-                    digits = re.findall(r'[0-3]', last_line)
-                    if len(digits) == 1:
-                        action = int(digits[0])
+                    # Fallback: look for a standalone digit 0-3 at the end
+                    m_fallback = re.search(r'\b([0-3])\s*$', reply)
+                    if m_fallback:
+                        action = int(m_fallback.group(1))
                     else:
-                        raise ValueError(f"Invalid model output, no 'Final: <0-3>' found. Last line: {last_line}")
+                        raise ValueError(f"Invalid model output, no 'Final: <0-3>' found in response")
                 else:
                     action = int(m.group(1))
                 
@@ -305,7 +328,7 @@ async def process_puzzle_step_by_step_visual(client: AsyncOpenAI, puzzle_data: D
             for step in range(max_steps + 1):
                 # Generate current state image with path traced so far
                 current_path = [{"x": p[0], "y": p[1]} for p in extracted_path]
-                b64_image = get_puzzle_image(puzzle_data, plot_type=plot_type, base_64_image=True, path=current_path if current_path else None)
+                b64_image = get_puzzle_image(puzzle_data, plot_type=plot_type, base_64_image=True, path=current_path if current_path else None, save_to_disk=True)
                 
                 # Create simple observation text for visual mode (gym now returns (x, y))
                 agent_loc = info.get('agent_location', 'unknown')
@@ -313,7 +336,11 @@ async def process_puzzle_step_by_step_visual(client: AsyncOpenAI, puzzle_data: D
                 legal_actions = info.get('legal_actions', [])
                 action_names = {0: 'RIGHT', 1: 'UP', 2: 'LEFT', 3: 'DOWN'}
                 legal_str = ', '.join([f"{a}={action_names.get(a, '?')}" for a in legal_actions])
-                obs_text = f"Step {step + 1} | Position: {agent_loc} | Legal moves: [{legal_str}]"
+                obs_text = f"""Step {step + 1} | Position: {agent_loc} | Legal moves: [{legal_str}]
+
+You MAY think step-by-step, but you MUST end your response with:
+Final: <digit>
+Where <digit> is exactly one of 0=RIGHT, 1=UP, 2=LEFT, 3=DOWN."""
                 
                 messages = [
                     system_message,
@@ -345,18 +372,19 @@ async def process_puzzle_step_by_step_visual(client: AsyncOpenAI, puzzle_data: D
                     raise ValueError("API returned empty response (content is None)")
                 reply = content.strip()
                 all_messages.append(reply)
+                reply = reply.split("</think>")[-1].strip()  # Remove any preceding think tags
+
                 
-                # Parse action from last line
-                last_line = reply.splitlines()[-1].strip() if reply else ""
-                m = re.match(r"^(?:Final:\s*)?([0-3])$", last_line)
+                # Parse action - search for "Final: <digit>" anywhere in response
+                m = re.search(r'Final:\s*([0-3])', reply, re.IGNORECASE)
                 
-                # Fallback: if there's exactly one digit 0-3 in the last line, use that
                 if not m:
-                    digits = re.findall(r'[0-3]', last_line)
-                    if len(digits) == 1:
-                        action = int(digits[0])
+                    # Fallback: look for a standalone digit 0-3 at the end
+                    m_fallback = re.search(r'\b([0-3])\s*$', reply)
+                    if m_fallback:
+                        action = int(m_fallback.group(1))
                     else:
-                        raise ValueError(f"Invalid model output, no 'Final: <0-3>' found. Last line: {last_line}")
+                        raise ValueError(f"Invalid model output, no 'Final: <0-3>' found in response")
                 else:
                     action = int(m.group(1))
                 

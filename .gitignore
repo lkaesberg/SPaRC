@@ -7,3 +7,4 @@ sparc/__pycache__/
 *.json
 *.csv
 uv.lock
+__pycache__

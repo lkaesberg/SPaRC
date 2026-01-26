@@ -77,11 +77,6 @@ You can move in 4 directions:
 
 ## How to Respond
 Analyze the puzzle image showing your current position and path progress. Determine which direction leads toward the exit while satisfying all puzzle rules. You can backtrack if you reach a dead end.
-
-You MAY think step-by-step, but you MUST end your response with:
-Final: <digit>
-
-Where <digit> is exactly one of 0, 1, 2, or 3.
 """
 
     return {
