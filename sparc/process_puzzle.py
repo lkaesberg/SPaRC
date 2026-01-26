@@ -241,7 +241,7 @@ Where <digit> is exactly one of 0=RIGHT, 1=UP, 2=LEFT, 3=DOWN."""
                     if m_fallback:
                         action = int(m_fallback.group(1))
                     else:
-                        raise ValueError(f"Invalid model output, no 'Final: <0-3>' found in response")
+                        raise ValueError(f"Invalid model output, no 'Final: <0-3>' found in response: {reply}")
                 else:
                     action = int(m.group(1))
                 
@@ -384,7 +384,7 @@ Where <digit> is exactly one of 0=RIGHT, 1=UP, 2=LEFT, 3=DOWN."""
                     if m_fallback:
                         action = int(m_fallback.group(1))
                     else:
-                        raise ValueError(f"Invalid model output, no 'Final: <0-3>' found in response")
+                        raise ValueError(f"Invalid model output, no 'Final: <0-3>' found in response: {reply}")
                 else:
                     action = int(m.group(1))
                 
