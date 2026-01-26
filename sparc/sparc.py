@@ -592,9 +592,9 @@ def main() -> None:
     parser.add_argument(
         "--plot-type",
         type=str,
-        default="path_cell_annotated",
+        default="original",
         choices=["original", "path_cell_annotated", "path_cell", "cell_annotated", "cell"],
-        help="Plot type for visual mode (default: path_cell_annotated)"
+        help="Plot type for visual mode (default: original)"
     )
     parser.add_argument(
         "--prompt",
