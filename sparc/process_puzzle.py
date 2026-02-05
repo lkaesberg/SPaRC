@@ -1,6 +1,6 @@
 import time
 import asyncio
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 from openai import AsyncOpenAI
 from rich.console import Console
 
@@ -17,6 +17,14 @@ from sparc.validation import extract_solution_path, validate_solution, analyze_p
 from sparc_visualization.plot import get_puzzle_image
 
 console = Console()
+
+
+def _get_content_and_reasoning(message) -> Tuple[Optional[str], Optional[str]]:
+    """Extract content and optional reasoning from a chat completion message.
+    Supports APIs (e.g. gpt-oss) that return reasoning in reasoning_content or reasoning."""
+    content = getattr(message, "content", None)
+    reasoning = getattr(message, "reasoning_content", None) or getattr(message, "reasoning", None)
+    return (content, reasoning if reasoning else None)
 
 async def process_puzzle(client: AsyncOpenAI, puzzle_data: Dict, model: str, temperature: float, puzzle_index: int, prompt_name: str = "single_shot") -> Dict:
     """Process a single puzzle asynchronously with retry logic for connection errors"""
@@ -41,10 +49,12 @@ async def process_puzzle(client: AsyncOpenAI, puzzle_data: Dict, model: str, tem
                 temperature=temperature,
             )
             
-            message = response.choices[0].message.content
-            if message is None:
+            msg = response.choices[0].message
+            content, reasoning = _get_content_and_reasoning(msg)
+            if content is None:
                 raise ValueError("API returned empty response (content is None)")
-            extracted_path = extract_solution_path(message, puzzle_data)
+            message = f"<think>{reasoning}</think>\n{content}" if reasoning else content
+            extracted_path = extract_solution_path(content, puzzle_data)
             solved = validate_solution(extracted_path, puzzle_data)
             analysis = analyze_path(extracted_path, puzzle_data)
             
@@ -118,10 +128,12 @@ async def process_puzzle_visual(client: AsyncOpenAI, puzzle_data: Dict, model: s
                 temperature=temperature,
             )
             
-            message = response.choices[0].message.content
-            if message is None:
+            msg = response.choices[0].message
+            content, reasoning = _get_content_and_reasoning(msg)
+            if content is None:
                 raise ValueError("API returned empty response (content is None)")
-            extracted_path = extract_solution_path(message, puzzle_data)
+            message = f"<think>{reasoning}</think>\n{content}" if reasoning else content
+            extracted_path = extract_solution_path(content, puzzle_data)
             solved = validate_solution(extracted_path, puzzle_data)
             analysis = analyze_path(extracted_path, puzzle_data)
             
@@ -225,11 +237,14 @@ Where <digit> is exactly one of 0=RIGHT, 1=UP, 2=LEFT, 3=DOWN."""
                     temperature=temperature,
                 )
                 
-                content = response.choices[0].message.content
+                msg = response.choices[0].message
+                content, step_reasoning = _get_content_and_reasoning(msg)
                 if content is None:
                     raise ValueError("API returned empty response (content is None)")
                 reply = content.strip()
-                all_messages.append(reply)
+                # Store full output: reasoning in <think>...</think>, then content (for gpt-oss etc.)
+                step_message = f"<think>{step_reasoning}</think>\n{reply}" if step_reasoning else reply
+                all_messages.append(step_message)
                 reply = reply.split("</think>")[-1].strip()  # Remove any preceding think tags
                 
                 # Parse action - search for "Final: <digit>" anywhere in response
@@ -367,11 +382,13 @@ Where <digit> is exactly one of 0=RIGHT, 1=UP, 2=LEFT, 3=DOWN."""
                     temperature=temperature,
                 )
                 
-                content = response.choices[0].message.content
+                msg = response.choices[0].message
+                content, step_reasoning = _get_content_and_reasoning(msg)
                 if content is None:
                     raise ValueError("API returned empty response (content is None)")
                 reply = content.strip()
-                all_messages.append(reply)
+                step_message = f"<think>{step_reasoning}</think>\n{reply}" if step_reasoning else reply
+                all_messages.append(step_message)
                 reply = reply.split("</think>")[-1].strip()  # Remove any preceding think tags
 
                 

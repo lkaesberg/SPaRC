@@ -65,10 +65,7 @@ def save_results(results: List[Dict], filename: str) -> None:
                         'message': result.get('message'),
                         'error': result.get('error'),
                         'info': result.get('info'),
-                        'reward': result.get('reward'),
                         'actions': result.get('actions'),
-                        
-
                     }
                 else:
                     # Single-shot mode result
