@@ -12,7 +12,7 @@ from rich.table import Table
 from rich.progress import Progress, TaskID, SpinnerColumn, TextColumn, BarColumn, MofNCompleteColumn, TimeElapsedColumn
 from rich.panel import Panel
 from rich import box
-from sparc.process_puzzle import process_puzzle, process_puzzle_step_by_step, process_puzzle_visual, process_puzzle_step_by_step_visual
+from sparc.process_puzzle import process_puzzle, process_puzzle_step_by_step, process_puzzle_visual, process_puzzle_step_by_step_visual, process_puzzle_step_by_step_random, process_puzzle_step_by_step_astar
 from sparc.tables import create_statistics_table, create_detailed_results_table
 from sparc.prompt import AVAILABLE_PROMPTS, auto_detect_prompt
 from datasets import load_dataset
@@ -155,14 +155,14 @@ def load_results(filename: str) -> tuple[List[Dict], Set[str]]:
 
 
 
-async def process_batch(client: AsyncOpenAI, batch_puzzles: List[tuple], model: str, temperature: float, verbose: bool, visual: bool = False, plot_type: str = "path_cell_annotated", prompt_name: str = "single_shot") -> List[Dict]:
+async def process_batch(client: AsyncOpenAI, batch_puzzles: List[tuple], model: str, temperature: float, verbose: bool, visual: bool = False, plot_type: str = "path_cell_annotated", prompt_name: str = "single_shot", extra_body: Optional[Dict] = None) -> List[Dict]:
     """Process a batch of puzzles concurrently"""
     tasks = []
     for puzzle_data, puzzle_index in batch_puzzles:
         if visual:
-            task = process_puzzle_visual(client, puzzle_data, model, temperature, puzzle_index, plot_type, prompt_name)
+            task = process_puzzle_visual(client, puzzle_data, model, temperature, puzzle_index, plot_type, prompt_name, extra_body)
         else:
-            task = process_puzzle(client, puzzle_data, model, temperature, puzzle_index, prompt_name)
+            task = process_puzzle(client, puzzle_data, model, temperature, puzzle_index, prompt_name, extra_body)
         tasks.append(task)
     
     results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -210,14 +210,14 @@ async def process_batch(client: AsyncOpenAI, batch_puzzles: List[tuple], model: 
     return processed_results
 
 
-async def process_batch_step_by_step(client: AsyncOpenAI, batch_puzzles: List[tuple], model: str, temperature: float, verbose: bool, gym_traceback: bool = False, visual: bool = False, plot_type: str = "path_cell_annotated", prompt_name: str = None) -> List[Dict]:
+async def process_batch_step_by_step(client: AsyncOpenAI, batch_puzzles: List[tuple], model: str, temperature: float, verbose: bool, gym_traceback: bool = False, visual: bool = False, plot_type: str = "path_cell_annotated", prompt_name: str = None, extra_body: Optional[Dict] = None) -> List[Dict]:
     """Process a batch of puzzles concurrently using step-by-step gym mode"""
     tasks = []
     for puzzle_data, puzzle_index in batch_puzzles:
         if visual:
-            task = process_puzzle_step_by_step_visual(client, puzzle_data, model, temperature, puzzle_index, gym_traceback, plot_type, prompt_name)
+            task = process_puzzle_step_by_step_visual(client, puzzle_data, model, temperature, puzzle_index, gym_traceback, plot_type, prompt_name, extra_body)
         else:
-            task = process_puzzle_step_by_step(client, puzzle_data, model, temperature, puzzle_index, gym_traceback, prompt_name)
+            task = process_puzzle_step_by_step(client, puzzle_data, model, temperature, puzzle_index, gym_traceback, prompt_name, extra_body)
         tasks.append(task)
     
     results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -251,7 +251,83 @@ async def process_batch_step_by_step(client: AsyncOpenAI, batch_puzzles: List[tu
     return processed_results
 
 
-async def process_dataset_async(dataset, client: AsyncOpenAI, model: str, temperature: float, batch_size: int, verbose: bool, results_file: str, skip_processed: Set[str], max_new: Optional[int] = None, gym_mode: bool = False, gym_traceback: bool = False, visual: bool = False, plot_type: str = "path_cell_annotated", prompt_name: str = "single_shot") -> List[Dict]:
+async def process_batch_random(batch_puzzles: List[tuple], verbose: bool, gym_traceback: bool = False) -> List[Dict]:
+    """Process a batch of puzzles concurrently using random action selection (ablation baseline)"""
+    tasks = []
+    for puzzle_data, puzzle_index in batch_puzzles:
+        task = process_puzzle_step_by_step_random(puzzle_data, puzzle_index, gym_traceback)
+        tasks.append(task)
+    
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    
+    # Handle any exceptions that occurred
+    processed_results = []
+    for i, result in enumerate(results):
+        if isinstance(result, Exception):
+            puzzle_data, puzzle_index = batch_puzzles[i]
+            puzzle_id = puzzle_data.get("id", f"idx_{puzzle_index}")
+            if verbose:
+                console.print(f"[red]❌ ERROR on puzzle {puzzle_id}: {str(result)}[/]")
+            continue
+        else:
+            processed_results.append(result)
+            
+            if verbose and result:
+                puzzle_id = result['puzzle_id']
+                solved = result['solved']
+                status_style = "green" if solved else "red"
+                status = "✅ SOLVED" if solved else "❌ FAILED"
+                puzzle_info = format_puzzle_info(result['puzzle_data'])
+                steps_taken = result.get('steps_taken', 0)
+                
+                console.print(f"[{status_style}]{status}[/] {puzzle_info} | Steps: {steps_taken} | Time: {result['processing_time']:.2f}s (random)")
+                
+                if result.get('no_legal_actions'):
+                    console.print(f"   [yellow]⚠️  No legal actions (couldn't reach end)[/]")
+                console.print()
+    
+    return processed_results
+
+
+async def process_batch_astar(batch_puzzles: List[tuple], verbose: bool, gym_traceback: bool = False) -> List[Dict]:
+    """Process a batch of puzzles concurrently using A* pathfinding (ablation baseline)"""
+    tasks = []
+    for puzzle_data, puzzle_index in batch_puzzles:
+        task = process_puzzle_step_by_step_astar(puzzle_data, puzzle_index, gym_traceback)
+        tasks.append(task)
+    
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    
+    # Handle any exceptions that occurred
+    processed_results = []
+    for i, result in enumerate(results):
+        if isinstance(result, Exception):
+            puzzle_data, puzzle_index = batch_puzzles[i]
+            puzzle_id = puzzle_data.get("id", f"idx_{puzzle_index}")
+            if verbose:
+                console.print(f"[red]❌ ERROR on puzzle {puzzle_id}: {str(result)}[/]")
+            continue
+        else:
+            processed_results.append(result)
+            
+            if verbose and result:
+                puzzle_id = result['puzzle_id']
+                solved = result['solved']
+                status_style = "green" if solved else "red"
+                status = "✅ SOLVED" if solved else "❌ FAILED"
+                puzzle_info = format_puzzle_info(result['puzzle_data'])
+                steps_taken = result.get('steps_taken', 0)
+                
+                console.print(f"[{status_style}]{status}[/] {puzzle_info} | Steps: {steps_taken} | Time: {result['processing_time']:.2f}s (A*)")
+                
+                if result.get('no_legal_actions'):
+                    console.print(f"   [yellow]⚠️  No legal actions (couldn't reach end)[/]")
+                console.print()
+    
+    return processed_results
+
+
+async def process_dataset_async(dataset, client: AsyncOpenAI, model: str, temperature: float, batch_size: int, verbose: bool, results_file: str, skip_processed: Set[str], max_new: Optional[int] = None, gym_mode: bool = False, gym_traceback: bool = False, visual: bool = False, plot_type: str = "path_cell_annotated", prompt_name: str = "single_shot", random_ablation: bool = False, astar_ablation: bool = False, extra_body: Optional[Dict] = None) -> List[Dict]:
     """Process the dataset in batches with graceful shutdown support
     Only up to `max_new` unseen puzzles will be processed if specified.
     """
@@ -311,10 +387,14 @@ async def process_dataset_async(dataset, client: AsyncOpenAI, model: str, temper
             progress.update(task, description="[cyan]Processing batch...")
             
             # Launch batch processing as background task so we can refresh ETA countdown
-            if gym_mode:
-                batch_task = asyncio.create_task(process_batch_step_by_step(client, batch_puzzles, model, temperature, verbose, gym_traceback, visual, plot_type, prompt_name))
+            if astar_ablation:
+                batch_task = asyncio.create_task(process_batch_astar(batch_puzzles, verbose, gym_traceback))
+            elif random_ablation:
+                batch_task = asyncio.create_task(process_batch_random(batch_puzzles, verbose, gym_traceback))
+            elif gym_mode:
+                batch_task = asyncio.create_task(process_batch_step_by_step(client, batch_puzzles, model, temperature, verbose, gym_traceback, visual, plot_type, prompt_name, extra_body))
             else:
-                batch_task = asyncio.create_task(process_batch(client, batch_puzzles, model, temperature, verbose, visual, plot_type, prompt_name))
+                batch_task = asyncio.create_task(process_batch(client, batch_puzzles, model, temperature, verbose, visual, plot_type, prompt_name, extra_body))
 
             # Periodically refresh ETA while the batch is running
             while not batch_task.done():
@@ -581,6 +661,16 @@ def main() -> None:
         help="Enable traceback visualization in gym mode (shows path history in observations)"
     )
     parser.add_argument(
+        "--random-ablation",
+        action="store_true",
+        help="Use random action selection instead of LLM for gym mode (ablation baseline). Implies --gym."
+    )
+    parser.add_argument(
+        "--astar-ablation",
+        action="store_true",
+        help="Use A* shortest-path search instead of LLM for gym mode (ablation baseline). Implies --gym."
+    )
+    parser.add_argument(
         "--timeout",
         type=float,
         default=1200.0,
@@ -605,8 +695,26 @@ def main() -> None:
         choices=AVAILABLE_PROMPTS,
         help=f"Prompt mode to use. If not specified, auto-detects based on --gym, --visual, and --gym-traceback. Available: {', '.join(AVAILABLE_PROMPTS)}"
     )
+    parser.add_argument(
+        "--extra-body",
+        type=str,
+        default=None,
+        help="Extra body parameters to include in OpenAI API requests as a JSON string (e.g. '{\"reasoning_effort\": \"high\"}')"
+    )
     
     args = parser.parse_args()
+
+    # Parse --extra-body JSON string into a dict
+    if args.extra_body is not None:
+        import json as _json
+        try:
+            args.extra_body = _json.loads(args.extra_body)
+        except _json.JSONDecodeError as e:
+            parser.error(f"--extra-body must be valid JSON: {e}")
+
+    # Ablation modes imply --gym
+    if args.random_ablation or args.astar_ablation:
+        args.gym = True
 
     # Auto-detect prompt if not specified
     if args.prompt is None:
@@ -616,8 +724,13 @@ def main() -> None:
     if args.results_file:
         base_name = args.results_file
     else:
-        base_name = args.model.replace('/', '_')
-        if args.gym:
+        if args.random_ablation:
+            base_name = "random_ablation"
+        elif args.astar_ablation:
+            base_name = "astar_ablation"
+        else:
+            base_name = args.model.replace('/', '_')
+        if args.gym and not args.random_ablation and not args.astar_ablation:
             base_name = f"{base_name}_gym"
         if args.visual:
             base_name = f"{base_name}_visual"
@@ -647,15 +760,21 @@ def main() -> None:
     config_table.add_row("Dataset Size", str(total_puzzles))
     config_table.add_row("Already Processed", str(len(skip_processed)))
     config_table.add_row("Remaining", str(total_puzzles - len(skip_processed)))
-    config_table.add_row("Model", args.model)
-    config_table.add_row("Temperature", str(args.temperature))
+    is_ablation = args.random_ablation or args.astar_ablation
+    config_table.add_row("Model", "N/A (ablation)" if is_ablation else args.model)
+    config_table.add_row("Temperature", "N/A" if is_ablation else str(args.temperature))
     config_table.add_row("Batch Size", str(args.batch_size))
     config_table.add_row("Results File", results_file)
     config_table.add_row("Max New", str(args.max_new) if args.max_new else "All")
-    config_table.add_row("Base URL", args.base_url)
-    mode_str = "Gym (step-by-step)" if args.gym else "Single-shot"
-    if args.visual:
-        mode_str += " + Visual"
+    config_table.add_row("Base URL", "N/A" if is_ablation else args.base_url)
+    if args.random_ablation:
+        mode_str = "Random Ablation (gym, random actions)"
+    elif args.astar_ablation:
+        mode_str = "A* Ablation (gym, shortest-path search)"
+    else:
+        mode_str = "Gym (step-by-step)" if args.gym else "Single-shot"
+        if args.visual:
+            mode_str += " + Visual"
     config_table.add_row("Mode", mode_str)
     config_table.add_row("Prompt", args.prompt)
     if args.gym:
@@ -681,7 +800,7 @@ def main() -> None:
     try:
         # Run async processing
         results = asyncio.run(process_dataset_async(
-            dataset, client, args.model, args.temperature, args.batch_size, args.verbose, results_file, skip_processed, args.max_new, args.gym, args.gym_traceback, args.visual, args.plot_type, args.prompt
+            dataset, client, args.model, args.temperature, args.batch_size, args.verbose, results_file, skip_processed, args.max_new, args.gym, args.gym_traceback, args.visual, args.plot_type, args.prompt, args.random_ablation, args.astar_ablation, args.extra_body
         ))
         
         if shutdown_requested:
