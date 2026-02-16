@@ -88,7 +88,7 @@ async def process_puzzle(client: AsyncOpenAI, puzzle_data: Dict, model: str, tem
                 raise e
 
 
-async def process_puzzle_visual(client: AsyncOpenAI, puzzle_data: Dict, model: str, temperature: float, puzzle_index: int, plot_type: str = "path_cell_annotated", prompt_name: str = "single_shot_visual", extra_body: Optional[Dict] = None) -> Dict:
+async def process_puzzle_visual(client: AsyncOpenAI, puzzle_data: Dict, model: str, temperature: float, puzzle_index: int, plot_type: str = "original", prompt_name: str = "single_shot_visual", extra_body: Optional[Dict] = None) -> Dict:
     """Process a single puzzle asynchronously using visual representation"""
     start_time = time.time()
     puzzle_id = puzzle_data.get("id", f"idx_{puzzle_index}")
