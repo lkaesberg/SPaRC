@@ -49,7 +49,7 @@ async def process_puzzle(client: AsyncOpenAI, puzzle_data: Dict, model: str, tem
                     {"role": "user", "content": prompt_dict["user"]},
                 ],
                 temperature=temperature,
-                **(extra_body or {}),
+                extra_body=extra_body,
             )
             
             msg = response.choices[0].message
@@ -129,7 +129,7 @@ async def process_puzzle_visual(client: AsyncOpenAI, puzzle_data: Dict, model: s
                 model=model,
                 messages=messages,
                 temperature=temperature,
-                **(extra_body or {}),
+                extra_body=extra_body,
             )
             
             msg = response.choices[0].message
@@ -239,7 +239,7 @@ Where <digit> is exactly one of 0=RIGHT, 1=UP, 2=LEFT, 3=DOWN."""
                     model=model,
                     messages=messages,
                     temperature=temperature,
-                    **(extra_body or {}),
+                    extra_body=extra_body,
                 )
                 
                 msg = response.choices[0].message
@@ -385,7 +385,7 @@ Where <digit> is exactly one of 0=RIGHT, 1=UP, 2=LEFT, 3=DOWN."""
                     model=model,
                     messages=messages,
                     temperature=temperature,
-                    **(extra_body or {}),
+                    extra_body=extra_body,
                 )
                 
                 msg = response.choices[0].message
