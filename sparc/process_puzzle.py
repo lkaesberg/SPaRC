@@ -20,6 +20,41 @@ from sparc_visualization.plot import get_puzzle_image
 
 console = Console()
 
+DIRECTION_WORD_TO_ACTION = {
+    'right': 0, 'up': 1, 'left': 2, 'down': 3,
+}
+
+
+def _parse_action(reply: str) -> int:
+    """Parse an action from the model's reply.
+
+    Accepted formats (case-insensitive):
+      Final: 2          (digit 0-3)
+      Final: left        (direction word)
+      Final: LEFT        (direction word, any case)
+    Falls back to a bare digit or direction word at the end of the reply.
+    """
+    # Primary: "Final: <digit>" or "Final: <word>"
+    m = re.search(r'Final:\s*([0-3])\b', reply, re.IGNORECASE)
+    if m:
+        return int(m.group(1))
+
+    m = re.search(r'Final:\s*(right|up|left|down)\b', reply, re.IGNORECASE)
+    if m:
+        return DIRECTION_WORD_TO_ACTION[m.group(1).lower()]
+
+    # Fallback: standalone digit 0-3 at the end
+    m = re.search(r'\b([0-3])\s*$', reply)
+    if m:
+        return int(m.group(1))
+
+    # Fallback: standalone direction word at the end
+    m = re.search(r'\b(right|up|left|down)\s*$', reply, re.IGNORECASE)
+    if m:
+        return DIRECTION_WORD_TO_ACTION[m.group(1).lower()]
+
+    raise ValueError(f"Invalid model output, no 'Final: <0-3|right|up|left|down>' found in response: {reply}")
+
 
 def _get_content_and_reasoning(message) -> Tuple[Optional[str], Optional[str]]:
     """Extract content and optional reasoning from a chat completion message.
@@ -227,8 +262,8 @@ Grid State:
 {obs_str}
 
 You MAY think step-by-step, but you MUST end your response with:
-Final: <digit>
-Where <digit> is exactly one of 0=RIGHT, 1=UP, 2=LEFT, 3=DOWN."""
+Final: <action>
+Where <action> is one of 0=RIGHT, 1=UP, 2=LEFT, 3=DOWN (you may also write the direction name, e.g. Final: right)."""
                 
                 messages = [
                     system_message,
@@ -247,23 +282,11 @@ Where <digit> is exactly one of 0=RIGHT, 1=UP, 2=LEFT, 3=DOWN."""
                 if content is None:
                     raise ValueError("API returned empty response (content is None)")
                 reply = content.strip()
-                # Store full output: reasoning in <think>...</think>, then content (for gpt-oss etc.)
                 step_message = f"<think>{step_reasoning}</think>\n{reply}" if step_reasoning else reply
                 all_messages.append(step_message)
-                reply = reply.split("</think>")[-1].strip()  # Remove any preceding think tags
+                reply = reply.split("</think>")[-1].strip()
                 
-                # Parse action - search for "Final: <digit>" anywhere in response
-                m = re.search(r'Final:\s*([0-3])', reply, re.IGNORECASE)
-                
-                if not m:
-                    # Fallback: look for a standalone digit 0-3 at the end
-                    m_fallback = re.search(r'\b([0-3])\s*$', reply)
-                    if m_fallback:
-                        action = int(m_fallback.group(1))
-                    else:
-                        raise ValueError(f"Invalid model output, no 'Final: <0-3>' found in response: {reply}")
-                else:
-                    action = int(m.group(1))
+                action = _parse_action(reply)
                 
                 all_actions.append(action)
                 obs, reward, terminated, truncated, info = env.step(action)
@@ -359,8 +382,8 @@ async def process_puzzle_step_by_step_visual(client: AsyncOpenAI, puzzle_data: D
                 obs_text = f"""Step {step + 1} | Position: {agent_loc} | Legal moves: [{legal_str}]
 
 You MAY think step-by-step, but you MUST end your response with:
-Final: <digit>
-Where <digit> is exactly one of 0=RIGHT, 1=UP, 2=LEFT, 3=DOWN."""
+Final: <action>
+Where <action> is one of 0=RIGHT, 1=UP, 2=LEFT, 3=DOWN (you may also write the direction name, e.g. Final: right)."""
                 
                 messages = [
                     system_message,
@@ -395,21 +418,9 @@ Where <digit> is exactly one of 0=RIGHT, 1=UP, 2=LEFT, 3=DOWN."""
                 reply = content.strip()
                 step_message = f"<think>{step_reasoning}</think>\n{reply}" if step_reasoning else reply
                 all_messages.append(step_message)
-                reply = reply.split("</think>")[-1].strip()  # Remove any preceding think tags
+                reply = reply.split("</think>")[-1].strip()
 
-                
-                # Parse action - search for "Final: <digit>" anywhere in response
-                m = re.search(r'Final:\s*([0-3])', reply, re.IGNORECASE)
-                
-                if not m:
-                    # Fallback: look for a standalone digit 0-3 at the end
-                    m_fallback = re.search(r'\b([0-3])\s*$', reply)
-                    if m_fallback:
-                        action = int(m_fallback.group(1))
-                    else:
-                        raise ValueError(f"Invalid model output, no 'Final: <0-3>' found in response: {reply}")
-                else:
-                    action = int(m.group(1))
+                action = _parse_action(reply)
                 
                 all_actions.append(action)
                 obs, reward, terminated, truncated, info = env.step(action)
