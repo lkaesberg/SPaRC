@@ -11,6 +11,7 @@ Available prompts:
 
 from .single_shot import get_prompt as get_single_shot_prompt
 from .single_shot_visual import get_prompt as get_single_shot_visual_prompt
+from .single_shot_visual_prompt_engineering import get_prompt as get_single_shot_visual_prompt_engineering_prompt
 from .gym_step import get_prompt as get_gym_step_prompt
 from .gym_step_traceback import get_prompt as get_gym_step_traceback_prompt
 from .gym_visual import get_prompt as get_gym_visual_prompt
@@ -20,6 +21,7 @@ from .gym_visual_traceback import get_prompt as get_gym_visual_traceback_prompt
 PROMPT_REGISTRY = {
     "single_shot": get_single_shot_prompt,
     "single_shot_visual": get_single_shot_visual_prompt,
+    "single_shot_visual_prompt_engineering": get_single_shot_visual_prompt_engineering_prompt,
     "gym_step": get_gym_step_prompt,
     "gym_step_traceback": get_gym_step_traceback_prompt,
     "gym_visual": get_gym_visual_prompt,

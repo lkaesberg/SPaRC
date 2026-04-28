@@ -14,6 +14,7 @@ from sparc.prompts import (
 )
 from sparc.prompts.single_shot import get_prompt as _get_single_shot
 from sparc.prompts.single_shot_visual import get_prompt as _get_single_shot_visual
+from sparc.prompts.single_shot_visual_prompt_engineering import get_prompt as _get_single_shot_visual_prompt_engineering
 from sparc.prompts.gym_step import get_prompt as _get_gym_step
 from sparc.prompts.gym_step_traceback import get_prompt as _get_gym_step_traceback
 from sparc.prompts.gym_visual import get_prompt as _get_gym_visual
@@ -57,10 +58,17 @@ def generate_prompt_step_by_step_visual_traceback(puzzle_data: Dict) -> str:
     return prompt_dict["system"]
 
 
+def generate_prompt_visual_prompt_engineering(puzzle_data: Dict) -> str:
+    """Generate single-shot visual prompt engineering prompt (backward compatible)."""
+    prompt_dict = _get_single_shot_visual_prompt_engineering(puzzle_data)
+    return prompt_dict["user"]
+
+
 # Export everything
 __all__ = [
     "generate_prompt",
     "generate_prompt_visual",
+    "generate_prompt_visual_prompt_engineering",
     "generate_prompt_step_by_step",
     "generate_prompt_step_by_step_traceback",
     "generate_prompt_step_by_step_visual",
