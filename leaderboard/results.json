@@ -631,5 +631,320 @@
     "n": 500,
     "source": "paper",
     "reference": "Spatial-Gym (arXiv 2604.09338), Table 4"
+  },
+  {
+    "model": "Qwen 3.5 397B (AWQ)",
+    "type": null,
+    "date": "2026-04-07",
+    "setting": "single-shot",
+    "accuracy_all": 38.0,
+    "accuracy_hard": 4.5,
+    "invalid_path_rate": 15.6,
+    "accuracy_by_level": {
+      "1": 83.7,
+      "2": 50.0,
+      "3": 37.2,
+      "4": 11.6,
+      "5": 4.5
+    },
+    "n": 500,
+    "n_hard": 89,
+    "source": "lab",
+    "reference": "Existing GippLab run (sparcVisualPuzzleEvaluation)",
+    "notes": "visual-scaffolds text baseline; date = result file date"
+  },
+  {
+    "model": "Qwen 3.5 27B",
+    "type": null,
+    "date": "2026-04-07",
+    "setting": "single-shot",
+    "accuracy_all": 33.9,
+    "accuracy_hard": 3.4,
+    "invalid_path_rate": 7.8,
+    "accuracy_by_level": {
+      "1": 77.9,
+      "2": 48.3,
+      "3": 29.8,
+      "4": 7.1,
+      "5": 3.4
+    },
+    "n": 498,
+    "n_hard": 88,
+    "source": "lab",
+    "reference": "Existing GippLab run (sparcVisualPuzzleEvaluation)",
+    "notes": "visual-scaffolds text baseline; 2 puzzles missing; date = result file date"
+  },
+  {
+    "model": "Gemma 4 31B",
+    "type": null,
+    "date": "2026-04-07",
+    "setting": "single-shot",
+    "accuracy_all": 16.6,
+    "accuracy_hard": 2.2,
+    "invalid_path_rate": 44.0,
+    "accuracy_by_level": {
+      "1": 51.2,
+      "2": 21.2,
+      "3": 6.6,
+      "4": 4.7,
+      "5": 2.2
+    },
+    "n": 500,
+    "n_hard": 89,
+    "source": "lab",
+    "reference": "Existing GippLab run (sparcVisualPuzzleEvaluation)",
+    "notes": "visual-scaffolds text baseline; date = result file date"
+  },
+  {
+    "model": "GLM 4.6V",
+    "type": null,
+    "date": "2026-04-07",
+    "setting": "single-shot",
+    "accuracy_all": 8.4,
+    "accuracy_hard": 0.0,
+    "invalid_path_rate": 68.6,
+    "accuracy_by_level": {
+      "1": 32.6,
+      "2": 6.8,
+      "3": 4.1,
+      "4": 1.2,
+      "5": 0.0
+    },
+    "n": 500,
+    "n_hard": 89,
+    "source": "lab",
+    "reference": "Existing GippLab run (sparcVisualPuzzleEvaluation)",
+    "notes": "visual-scaffolds text baseline; date = result file date"
+  },
+  {
+    "model": "Llama 4 Scout",
+    "type": null,
+    "date": "2026-04-07",
+    "setting": "single-shot",
+    "accuracy_all": 3.8,
+    "accuracy_hard": 1.1,
+    "invalid_path_rate": 61.6,
+    "accuracy_by_level": {
+      "1": 7.0,
+      "2": 5.9,
+      "3": 3.3,
+      "4": 1.2,
+      "5": 1.1
+    },
+    "n": 500,
+    "n_hard": 89,
+    "source": "lab",
+    "reference": "Existing GippLab run (sparcVisualPuzzleEvaluation)",
+    "notes": "visual-scaffolds text baseline; date = result file date"
+  },
+  {
+    "model": "Mistral Small 3.2 24B",
+    "type": null,
+    "date": "2026-04-07",
+    "setting": "single-shot",
+    "accuracy_all": 1.2,
+    "accuracy_hard": 0.0,
+    "invalid_path_rate": 92.8,
+    "accuracy_by_level": {
+      "1": 4.7,
+      "2": 0.0,
+      "3": 0.8,
+      "4": 1.2,
+      "5": 0.0
+    },
+    "n": 500,
+    "n_hard": 89,
+    "source": "lab",
+    "reference": "Existing GippLab run (sparcVisualPuzzleEvaluation)",
+    "notes": "visual-scaffolds text baseline; date = result file date"
+  },
+  {
+    "model": "Qwen 3 14B",
+    "type": null,
+    "date": "2025-08-15",
+    "setting": "single-shot",
+    "accuracy_all": 12.6,
+    "accuracy_hard": 1.1,
+    "invalid_path_rate": 38.4,
+    "accuracy_by_level": {
+      "1": 44.2,
+      "2": 13.6,
+      "3": 5.8,
+      "4": 1.2,
+      "5": 1.1
+    },
+    "n": 500,
+    "n_hard": 89,
+    "source": "lab",
+    "reference": "Existing GippLab run (Sparc-train)",
+    "notes": "base model, reasoning on; date = result file date"
+  },
+  {
+    "model": "Qwen 3 8B",
+    "type": null,
+    "date": "2025-11-12",
+    "setting": "single-shot",
+    "accuracy_all": 10.0,
+    "accuracy_hard": 0.0,
+    "invalid_path_rate": 38.4,
+    "accuracy_by_level": {
+      "1": 37.2,
+      "2": 11.9,
+      "3": 2.5,
+      "4": 1.2,
+      "5": 0.0
+    },
+    "n": 500,
+    "n_hard": 89,
+    "source": "lab",
+    "reference": "Existing GippLab run (Sparc-train)",
+    "notes": "base model, reasoning on; date = result file date"
+  },
+  {
+    "model": "Qwen 3 4B",
+    "type": null,
+    "date": "2025-11-12",
+    "setting": "single-shot",
+    "accuracy_all": 7.8,
+    "accuracy_hard": 0.0,
+    "invalid_path_rate": 41.8,
+    "accuracy_by_level": {
+      "1": 26.7,
+      "2": 9.3,
+      "3": 3.3,
+      "4": 1.2,
+      "5": 0.0
+    },
+    "n": 500,
+    "n_hard": 89,
+    "source": "lab",
+    "reference": "Existing GippLab run (Sparc-train)",
+    "notes": "base model, reasoning on; date = result file date"
+  },
+  {
+    "model": "Gemma 4 31B",
+    "type": null,
+    "date": "2026-05-29",
+    "setting": "step-by-step",
+    "accuracy_all": 13.8,
+    "accuracy_hard": 2.2,
+    "invalid_path_rate": null,
+    "accuracy_by_level": {
+      "1": 39.5,
+      "2": 15.3,
+      "3": 9.9,
+      "4": 3.5,
+      "5": 2.2
+    },
+    "n": 500,
+    "n_hard": 89,
+    "source": "lab",
+    "reference": "Existing GippLab run (sparc-gym-analysis)",
+    "notes": "date = result file date"
+  },
+  {
+    "model": "Qwen 3 14B",
+    "type": null,
+    "date": "2026-02-18",
+    "setting": "step-by-step",
+    "accuracy_all": 10.2,
+    "accuracy_hard": 0.0,
+    "invalid_path_rate": null,
+    "accuracy_by_level": {
+      "1": 26.7,
+      "2": 13.6,
+      "3": 7.4,
+      "4": 3.5,
+      "5": 0.0
+    },
+    "n": 500,
+    "n_hard": 89,
+    "source": "lab",
+    "reference": "Existing GippLab run (sparc-gym-analysis)",
+    "notes": "date = result file date"
+  },
+  {
+    "model": "Qwen 3 VL 32B Thinking",
+    "type": null,
+    "date": "2026-02-18",
+    "setting": "step-by-step",
+    "accuracy_all": 10.2,
+    "accuracy_hard": 1.1,
+    "invalid_path_rate": null,
+    "accuracy_by_level": {
+      "1": 37.2,
+      "2": 10.2,
+      "3": 4.1,
+      "4": 1.2,
+      "5": 1.1
+    },
+    "n": 500,
+    "n_hard": 89,
+    "source": "lab",
+    "reference": "Existing GippLab run (sparc-gym-analysis)",
+    "notes": "text observations; date = result file date"
+  },
+  {
+    "model": "Qwen 3 4B",
+    "type": null,
+    "date": "2026-02-18",
+    "setting": "step-by-step",
+    "accuracy_all": 7.0,
+    "accuracy_hard": 1.1,
+    "invalid_path_rate": null,
+    "accuracy_by_level": {
+      "1": 19.8,
+      "2": 8.5,
+      "3": 5.8,
+      "4": 0.0,
+      "5": 1.1
+    },
+    "n": 500,
+    "n_hard": 89,
+    "source": "lab",
+    "reference": "Existing GippLab run (sparc-gym-analysis)",
+    "notes": "date = result file date"
+  },
+  {
+    "model": "A* agent (no LLM)",
+    "type": "baseline",
+    "date": "2026-02-12",
+    "setting": "step-by-step",
+    "accuracy_all": 6.4,
+    "accuracy_hard": 0.0,
+    "invalid_path_rate": null,
+    "accuracy_by_level": {
+      "1": 15.1,
+      "2": 9.3,
+      "3": 4.1,
+      "4": 3.5,
+      "5": 0.0
+    },
+    "n": 500,
+    "n_hard": 89,
+    "source": "lab",
+    "reference": "Existing GippLab run (sparc-gym-analysis)",
+    "notes": "non-LLM baseline (Spatial-Gym paper, Figure 8); date = result file date"
+  },
+  {
+    "model": "Random agent (no LLM)",
+    "type": "baseline",
+    "date": "2026-02-12",
+    "setting": "step-by-step",
+    "accuracy_all": 2.4,
+    "accuracy_hard": 0.0,
+    "invalid_path_rate": null,
+    "accuracy_by_level": {
+      "1": 5.8,
+      "2": 5.9,
+      "3": 0.0,
+      "4": 0.0,
+      "5": 0.0
+    },
+    "n": 500,
+    "n_hard": 89,
+    "source": "lab",
+    "reference": "Existing GippLab run (sparc-gym-analysis)",
+    "notes": "non-LLM baseline (Spatial-Gym paper, Figure 8); date = result file date"
   }
 ]
