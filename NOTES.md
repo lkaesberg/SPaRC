@@ -96,7 +96,18 @@ _(filled in by Tasks B/E)_
 
 ## Commands left for a human
 
-_(filled in per task)_
+### Task A
+- **PyPI release (A5).** The PyPI page for `sparc-puzzle` (currently 0.5.9) still shows the wrong pages
+  (10370–10401). After `task-a-citations` is merged into `main`, cut a release. The publish workflow takes the
+  version from the tag:
+  ```bash
+  gh release create v0.5.10 -R lkaesberg/SPaRC --target main --title v0.5.10 --notes "Fix citation (EMNLP 2025 pages 10359--10390); related-work section"
+  ```
+- **HF dataset card (A3).** The stored HF token is read-only (`role: read`), so the upload was refused. The
+  edited card is committed locally in `paper-boost/SPaRC-hf` (commit "Task A3: …"). With a write token:
+  ```bash
+  cd paper-boost/SPaRC-hf && hf upload lkaesberg/SPaRC README.md README.md --repo-type dataset --commit-message "Fix SPaRC citation pages (10359--10390); add task_categories, language, tags"
+  ```
 
 ## Third-party guide differences
 
