@@ -946,5 +946,55 @@
     "source": "lab",
     "reference": "Existing GippLab run (sparc-gym-analysis)",
     "notes": "non-LLM baseline (Spatial-Gym paper, Figure 8); date = result file date"
+  },
+  {
+    "model": "Gemma-3 27B",
+    "model_id": "openrouter/google/gemma-3-27b-it",
+    "date": "2026-10-13",
+    "setting": "single-shot",
+    "accuracy_all": 0.4,
+    "accuracy_hard": 0.0,
+    "invalid_path_rate": 81.2,
+    "accuracy_by_level": {
+      "1": 1.2,
+      "2": 0.8,
+      "3": 0.0,
+      "4": 0.0,
+      "5": 0.0
+    },
+    "n": 500,
+    "n_hard": 89,
+    "errors": 0,
+    "source": "rerun",
+    "reasoning_effort": null,
+    "max_tokens": null,
+    "inspect_task": "sparc (version 1-A)",
+    "dataset_revision": "e2d908363190e9a244f931df2654a501facc90a7",
+    "log": "2026-10-13T10-46-24-00-00_sparc_bYgXdrpjp28dgyieWivC6Q.eval"
+  },
+  {
+    "model": "Qwen 2.5 72B",
+    "model_id": "openrouter/qwen/qwen-2.5-72b-instruct",
+    "date": "2026-10-13",
+    "setting": "single-shot",
+    "accuracy_all": 0.4,
+    "accuracy_hard": 0.0,
+    "invalid_path_rate": 95.4,
+    "accuracy_by_level": {
+      "1": 0.0,
+      "2": 0.0,
+      "3": 1.7,
+      "4": 0.0,
+      "5": 0.0
+    },
+    "n": 500,
+    "n_hard": 89,
+    "errors": 0,
+    "source": "rerun",
+    "reasoning_effort": null,
+    "max_tokens": null,
+    "inspect_task": "sparc (version 1-A)",
+    "dataset_revision": "e2d908363190e9a244f931df2654a501facc90a7",
+    "log": "2026-10-13T10-52-12-00-00_sparc_MJr8B44DVMHrQu6m4hhReT.eval"
   }
 ]
