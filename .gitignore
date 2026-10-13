@@ -8,3 +8,4 @@ sparc/__pycache__/
 *.csv
 uv.lock
 __pycache__
+!leaderboard/results.json
