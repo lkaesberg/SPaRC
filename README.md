@@ -233,7 +233,7 @@ If you use SPaRC in your research, please cite:
 |---|---|---|
 | SPaRC: A Spatial Pathfinding Reasoning Challenge | EMNLP 2025 (Main) | [ACL Anthology](https://aclanthology.org/2025.emnlp-main.526/) · [arXiv:2505.16686](https://arxiv.org/abs/2505.16686) · [Code](https://github.com/lkaesberg/SPaRC) · [Dataset](https://huggingface.co/datasets/lkaesberg/SPaRC) |
 | Mind the Gap Between Spatial Reasoning and Acting! Step-by-Step Evaluation of Agents With Spatial-Gym | arXiv preprint, 2026 | [arXiv:2604.09338](https://arxiv.org/abs/2604.09338) · [Code](https://github.com/lkaesberg/Spatial-Gym) |
-| Is Visual Prompting All You Need? Studying VLM Spatial Reasoning under Progressive Visual Scaffolds | arXiv preprint, 2026 | [arXiv:2608.21170](https://arxiv.org/abs/2608.21170) |
+| Is Visual Prompting All You Need? Studying VLM Spatial Reasoning under Progressive Visual Scaffolds | Findings of EMNLP 2026 | [arXiv:2608.21170](https://arxiv.org/abs/2608.21170) |
 | Voting or Consensus? Decision-Making in Multi-Agent Debate | Findings of ACL 2025 | [ACL Anthology](https://aclanthology.org/2025.findings-acl.606/) · [arXiv:2502.19130](https://arxiv.org/abs/2502.19130) |
 
 ## License
