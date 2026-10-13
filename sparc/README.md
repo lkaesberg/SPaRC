@@ -88,6 +88,23 @@ as above. Command:
 inspect eval sparc --model openrouter/google/gemma-3-27b-it --max-connections 25
 ```
 
+### Newer models
+
+These models are not in the paper, so there is no paper number to compare with. They were run on 2026-10-13
+with the same task, `--reasoning-effort medium` (the paper's setting for reasoning models) and
+`--max-tokens 32000`. Two models were run on a 100-puzzle subset (20 per level) to stay within budget, so their
+"hard" value rests on only 20 puzzles.
+
+| Model (Inspect id) | Puzzles | Accuracy | Hard (level 5) | Invalid path |
+|---|---|---|---|---|
+| GPT-6.1 Sol (`openrouter/openai/gpt-6.1-sol`) | 500 | 83.6% | 49.4% | 7.2% |
+| Gemini 3.8 Flash (`openrouter/google/gemini-3.8-flash`) | 100 | 80.0% | 30.0% | 15.0% |
+| DeepSeek V4.1 Flash (`openrouter/deepseek/deepseek-v4.1-flash`) | 500 | 41.8% | 4.5% | 39.4% |
+| Claude Sonnet 5.5 (`openrouter/anthropic/claude-sonnet-5.5`) | 100 | 34.0% | 10.0% | 16.0% |
+
+For comparison, humans solve 98.0% (94.5% of the hard puzzles), and o4-mini solved 15.8% in the paper. The full
+table, with all paper rows, is on the [leaderboard](https://sparc.gipplab.org/#leaderboard).
+
 ## Citation
 
 ```bibtex
