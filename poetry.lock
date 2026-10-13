@@ -4,10 +4,10 @@
 name = "agent-client-protocol"
 version = "0.12.1"
 description = "A Python implement of Agent Client Protocol (ACP, by Zed Industries)"
-optional = false
+optional = true
 python-versions = "<3.15,>=3.10"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "agent_client_protocol-0.12.1-py3-none-any.whl", hash = "sha256:aaf3cc301ed87d9e2c4ccb91adfe1cd58784355f6ce7e513f50e7ca2391862ef"},
     {file = "agent_client_protocol-0.12.1.tar.gz", hash = "sha256:9963ccb590ed96d7dc542c9c023e90676fc76b1c6562e21a9ee112f4fbcb0095"},
@@ -24,10 +24,10 @@ logfire = ["logfire (>=0.14)", "opentelemetry-sdk (>=1.28.0)"]
 name = "aiobotocore"
 version = "2.26.0"
 description = "Async client for aws services using botocore and aiohttp"
-optional = false
+optional = true
 python-versions = ">=3.9"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "aiobotocore-2.26.0-py3-none-any.whl", hash = "sha256:a793db51c07930513b74ea7a95bd79aaa42f545bdb0f011779646eafa216abec"},
     {file = "aiobotocore-2.26.0.tar.gz", hash = "sha256:50567feaf8dfe2b653570b4491f5bc8c6e7fb9622479d66442462c021db4fadc"},
@@ -206,10 +206,10 @@ speedups = ["Brotli ; platform_python_implementation == \"CPython\"", "aiodns (>
 name = "aioitertools"
 version = "0.13.0"
 description = "itertools and builtins for AsyncIO and mixed iterables"
-optional = false
+optional = true
 python-versions = ">=3.9"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "aioitertools-0.13.0-py3-none-any.whl", hash = "sha256:0be0292b856f08dfac90e31f4739432f4cb6d7520ab9eb73e143f4f2fa5259be"},
     {file = "aioitertools-0.13.0.tar.gz", hash = "sha256:620bd241acc0bbb9ec819f1ab215866871b4bbd1f73836a55f799200ee86950c"},
@@ -235,10 +235,10 @@ typing-extensions = {version = ">=4.2", markers = "python_version < \"3.13\""}
 name = "annotated-doc"
 version = "0.0.5"
 description = "Document parameters, class attributes, return types, and variables inline, with Annotated."
-optional = false
+optional = true
 python-versions = ">=3.9"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "annotated_doc-0.0.5-py3-none-any.whl", hash = "sha256:117bac03a25ede5df5440e855b32d556049ca169ead221505badf432fed4b101"},
     {file = "annotated_doc-0.0.5.tar.gz", hash = "sha256:c7e58ce09192557605d8bbd92836d7e1d520ac9580096042c0bfd197efacf1bb"},
@@ -305,10 +305,10 @@ files = [
 name = "beautifulsoup4"
 version = "4.15.0"
 description = "Screen-scraping library"
-optional = false
+optional = true
 python-versions = ">=3.7.0"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "beautifulsoup4-4.15.0-py3-none-any.whl", hash = "sha256:d6f88de62e1d4e38ecb1077eb9724cd0eff29d2a08ca16a401e9b9e93f117cf9"},
     {file = "beautifulsoup4-4.15.0.tar.gz", hash = "sha256:288e3ca7d54b06f2ac191970bc275c1939cb46d450b255bf6718b04aa37ab4f7"},
@@ -329,10 +329,10 @@ lxml = ["lxml"]
 name = "boto3"
 version = "1.41.5"
 description = "The AWS SDK for Python"
-optional = false
+optional = true
 python-versions = ">=3.9"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "boto3-1.41.5-py3-none-any.whl", hash = "sha256:bb278111bfb4c33dca8342bda49c9db7685e43debbfa00cc2a5eb854dd54b745"},
     {file = "boto3-1.41.5.tar.gz", hash = "sha256:bc7806bee681dfdff2fe2b74967b107a56274f1e66ebe4d20dc8eee1ea408d17"},
@@ -350,10 +350,10 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 name = "botocore"
 version = "1.41.5"
 description = "Low-level, data-driven core of boto 3."
-optional = false
+optional = true
 python-versions = ">=3.9"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "botocore-1.41.5-py3-none-any.whl", hash = "sha256:3fef7fcda30c82c27202d232cfdbd6782cb27f20f8e7e21b20606483e66ee73a"},
     {file = "botocore-1.41.5.tar.gz", hash = "sha256:0367622b811597d183bfcaab4a350f0d3ede712031ce792ef183cabdee80d3bf"},
@@ -599,10 +599,10 @@ vision = ["Pillow (>=9.4.0)"]
 name = "debugpy"
 version = "1.8.22"
 description = "An implementation of the Debug Adapter Protocol for Python"
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "debugpy-1.8.22-cp310-cp310-macosx_15_0_x86_64.whl", hash = "sha256:fa47099176d1d612bef69e9f74658a5687a9f05bd80fb5710f99959bace85735"},
     {file = "debugpy-1.8.22-cp310-cp310-manylinux_2_34_x86_64.whl", hash = "sha256:7bf29e0d8ce80b100d37fb333e1b193b790d962739f3067796c2b03ffdc9afee"},
@@ -656,10 +656,10 @@ profile = ["gprof2dot (>=2022.7.29)"]
 name = "docstring-parser"
 version = "0.18.0"
 description = "Parse Python docstrings in reST, Google and Numpydoc format"
-optional = false
+optional = true
 python-versions = ">=3.8"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "docstring_parser-0.18.0-py3-none-any.whl", hash = "sha256:b3fcbed555c47d8479be0796ef7e19c2670d428d72e96da63f3a40122860374b"},
     {file = "docstring_parser-0.18.0.tar.gz", hash = "sha256:292510982205c12b1248696f44959db3cdd1740237a968ea1e2e7a900eeb2015"},
@@ -705,10 +705,10 @@ files = [
 name = "fastapi"
 version = "0.143.0"
 description = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "fastapi-0.143.0-py3-none-any.whl", hash = "sha256:3e9395fd35276425b61b516a31fdd7c77fe2af83e41b4da22e30696fb1304c5d"},
     {file = "fastapi-0.143.0.tar.gz", hash = "sha256:1acffe48206a80917cf7dac21992b5c44b25384e8902bf745c1fd9dabcf6c51f"},
@@ -1168,10 +1168,10 @@ all = ["coverage (>=7.10.0)", "hypothesis (>=6.141.1)", "mypy (>=1.11.2)", "pyte
 name = "ijson"
 version = "3.6.0"
 description = "Iterative JSON parser with standard Python iterator interfaces"
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "ijson-3.6.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:b207ffd091f4f0cac14d283529fd40e974510bf5152b00d2efcb2975e599581b"},
     {file = "ijson-3.6.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:42241cac70f9a0d690dcab88f7ab83ab479ddeee0b56b4120a104119622f01fa"},
@@ -1282,10 +1282,10 @@ files = [
 name = "inspect-ai"
 version = "0.3.279"
 description = "Framework for large language model evaluations"
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "inspect_ai-0.3.279-py3-none-any.whl", hash = "sha256:4a2f2a0558ed11d8485f0b63e3592887dc8ae6f1549fb9eda0b9836c0a5ecf6a"},
     {file = "inspect_ai-0.3.279.tar.gz", hash = "sha256:55a2bb5c477b3e424965e343c4d3de4c261e958daa4dcd380ddd7fa45f013237"},
@@ -1473,10 +1473,10 @@ files = [
 name = "jmespath"
 version = "1.1.0"
 description = "JSON Matching Expressions"
-optional = false
+optional = true
 python-versions = ">=3.9"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "jmespath-1.1.0-py3-none-any.whl", hash = "sha256:a5663118de4908c91729bea0acadca56526eb2698e83de10cd116ae0f4e97c64"},
     {file = "jmespath-1.1.0.tar.gz", hash = "sha256:472c87d80f36026ae83c6ddd0f1d05d4e510134ed462851fd5f754c8c3cbb88d"},
@@ -1486,10 +1486,10 @@ files = [
 name = "jsonlines"
 version = "4.0.0"
 description = "Library with helpers for the jsonlines file format"
-optional = false
+optional = true
 python-versions = ">=3.8"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "jsonlines-4.0.0-py3-none-any.whl", hash = "sha256:185b334ff2ca5a91362993f42e83588a360cf95ce4b71a73548502bda52a7c55"},
     {file = "jsonlines-4.0.0.tar.gz", hash = "sha256:0c6d2c09117550c089995247f605ae4cf77dd1533041d366351f6f298822ea74"},
@@ -1502,10 +1502,10 @@ attrs = ">=19.2.0"
 name = "jsonpatch"
 version = "1.35"
 description = "Apply JSON-Patches (RFC 6902) "
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "jsonpatch-1.35-py3-none-any.whl", hash = "sha256:417e05303ebf7aef98d3ebf1e1ae7e7a4de6ec57bc5d243cd3509eff650e959f"},
     {file = "jsonpatch-1.35.tar.gz", hash = "sha256:679ad08672b4663c7ef1e5f3331d940f5e7786661b9acc1530104be1638e7a4f"},
@@ -1518,10 +1518,10 @@ jsonpointer = ">=3.2"
 name = "jsonpath-ng"
 version = "1.8.0"
 description = "A final implementation of JSONPath for Python that aims to be standard compliant, including arithmetic and binary comparison operators and providing clear AST for metaprogramming."
-optional = false
+optional = true
 python-versions = "*"
 groups = ["main"]
-markers = "python_version == \"3.10\""
+markers = "python_version == \"3.10\" and extra == \"inspect\""
 files = [
     {file = "jsonpath_ng-1.8.0-py3-none-any.whl", hash = "sha256:b8dde192f8af58d646fc031fac9c99fe4d00326afc4148f1f043c601a8cfe138"},
     {file = "jsonpath_ng-1.8.0.tar.gz", hash = "sha256:54252968134b5e549ea5b872f1df1168bd7defe1a52fed5a358c194e1943ddc3"},
@@ -1531,10 +1531,10 @@ files = [
 name = "jsonpath-ng"
 version = "1.10.1"
 description = "A final implementation of JSONPath for Python that aims to be standard compliant, including arithmetic and binary comparison operators and providing clear AST for metaprogramming."
-optional = false
+optional = true
 python-versions = ">=3.11"
 groups = ["main"]
-markers = "python_version >= \"3.11\" and python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\" and python_version >= \"3.11\""
 files = [
     {file = "jsonpath_ng-1.10.1-py3-none-any.whl", hash = "sha256:9355047e5e6a8919f5ae0ccfd5b793bff69e4165f1248b1763e8962457b58ff5"},
     {file = "jsonpath_ng-1.10.1.tar.gz", hash = "sha256:1247d0983361ebe44f47741e759bbb76e74213c68f25abb4b65f6de21d1934d6"},
@@ -1544,10 +1544,10 @@ files = [
 name = "jsonpointer"
 version = "3.2.1"
 description = "Identify specific nodes in a JSON document (RFC 6901) "
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "jsonpointer-3.2.1-py3-none-any.whl", hash = "sha256:b19ee68644e9ffb51440448d8f7811af2b7406eea1db90603e93f5849323119a"},
     {file = "jsonpointer-3.2.1.tar.gz", hash = "sha256:47c846513b3a4ec46eecef1105207fba075e2a3659048e362bd7daff0fc33342"},
@@ -1557,10 +1557,10 @@ files = [
 name = "jsonref"
 version = "1.1.0"
 description = "jsonref is a library for automatic dereferencing of JSON Reference objects for Python."
-optional = false
+optional = true
 python-versions = ">=3.7"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "jsonref-1.1.0-py3-none-any.whl", hash = "sha256:590dc7773df6c21cbf948b5dac07a72a251db28b0238ceecce0a2abfa8ec30a9"},
     {file = "jsonref-1.1.0.tar.gz", hash = "sha256:32fe8e1d85af0fdefbebce950af85590b22b60f9e95443176adbde4e1ecea552"},
@@ -1570,10 +1570,10 @@ files = [
 name = "jsonschema"
 version = "4.26.0"
 description = "An implementation of JSON Schema validation for Python"
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "jsonschema-4.26.0-py3-none-any.whl", hash = "sha256:d489f15263b8d200f8387e64b4c3a75f06629559fb73deb8fdfb525f2dab50ce"},
     {file = "jsonschema-4.26.0.tar.gz", hash = "sha256:0c26707e2efad8aa1bfc5b7ce170f3fccc2e4918ff85989ba9ffa9facb2be326"},
@@ -1593,10 +1593,10 @@ format-nongpl = ["fqdn", "idna", "isoduration", "jsonpointer (>1.13)", "rfc3339-
 name = "jsonschema-specifications"
 version = "2025.9.1"
 description = "The JSON Schema meta-schemas and vocabularies, exposed as a Registry"
-optional = false
+optional = true
 python-versions = ">=3.9"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "jsonschema_specifications-2025.9.1-py3-none-any.whl", hash = "sha256:98802fee3a11ee76ecaca44429fda8a41bff98b00a0f2838151b113f210cc6fe"},
     {file = "jsonschema_specifications-2025.9.1.tar.gz", hash = "sha256:b540987f239e745613c7a9176f3edb72b832a4ac465cf02712288397832b5e8d"},
@@ -1609,10 +1609,10 @@ referencing = ">=0.31.0"
 name = "linkify-it-py"
 version = "2.2.0"
 description = "Links recognition library with FULL unicode support."
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "linkify_it_py-2.2.0-py3-none-any.whl", hash = "sha256:3adc40eb5af300b2605fcfdb968c24e1d780a90f1f2221af7c15e5111e94d443"},
     {file = "linkify_it_py-2.2.0.tar.gz", hash = "sha256:907acd2d17ac1fbb9ddb62c8957ccbd6158cac602231a15c3b0cd1e215f03cee"},
@@ -1654,10 +1654,10 @@ testing = ["coverage", "pytest", "pytest-cov", "pytest-regressions", "requests"]
 name = "mdit-py-plugins"
 version = "0.6.1"
 description = "Collection of plugins for markdown-it-py"
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "mdit_py_plugins-0.6.1-py3-none-any.whl", hash = "sha256:214c82fb2ac524472ab6a5bcab1de80f73b50443e187f401bfd77efbc7c6481d"},
     {file = "mdit_py_plugins-0.6.1.tar.gz", hash = "sha256:a2bca0f039f39dbd35fb74ae1b5f998608c437463371f0ff7f49a19a17a114d0"},
@@ -1687,10 +1687,10 @@ files = [
 name = "mmh3"
 version = "5.3.1"
 description = "Python extension for MurmurHash (MurmurHash3), a set of fast and robust hash functions."
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "mmh3-5.3.1-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:a0df74f1d6e1ee35561487e6ecb1d05e37a5d424cc74a2addff7181a0b7a3460"},
     {file = "mmh3-5.3.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:cbe3391ba8e58f06cdc93c2bcbffaf1bd339571b95a6f7ae5784c5cf6285a138"},
@@ -2050,10 +2050,10 @@ dill = ">=0.3.8"
 name = "nest-asyncio2"
 version = "1.7.4"
 description = "Patch asyncio to allow nested event loops"
-optional = false
+optional = true
 python-versions = ">=3.5"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "nest_asyncio2-1.7.4-py3-none-any.whl", hash = "sha256:86e77b52c3d1496b294af3c944b44213b9b82a12a5ee590c0acc4ca4692ef6c7"},
     {file = "nest_asyncio2-1.7.4.tar.gz", hash = "sha256:995b1409d926ec55e0876ea39a69bffdd8852cf1db3652c177e8c8ffdbcaf3cc"},
@@ -2241,10 +2241,10 @@ voice-helpers = ["numpy (>=2.0.2)", "sounddevice (>=0.5.1)"]
 name = "opentelemetry-api"
 version = "1.45.1"
 description = "OpenTelemetry Python API"
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "opentelemetry_api-1.45.1-py3-none-any.whl", hash = "sha256:b31553efa588ae44bc306f863c785c5333a9ecc091248c6ee68b4b6c87fdedfb"},
     {file = "opentelemetry_api-1.45.1.tar.gz", hash = "sha256:aa38ed19bcc084ba42782a73255b3582283eced7ad6dddbd6695189e69adfb75"},
@@ -2369,10 +2369,10 @@ xml = ["lxml (>=4.9.2)"]
 name = "pathlib-abc"
 version = "0.5.2"
 description = "Backport of pathlib ABCs"
-optional = false
+optional = true
 python-versions = ">=3.9"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "pathlib_abc-0.5.2-py3-none-any.whl", hash = "sha256:4c9d94cf1b23af417ce7c0417b43333b06a106c01000b286c99de230d95eefbb"},
     {file = "pathlib_abc-0.5.2.tar.gz", hash = "sha256:fcd56f147234645e2c59c7ae22808b34c364bb231f685ddd9f96885aed78a94c"},
@@ -2487,10 +2487,10 @@ xmp = ["defusedxml"]
 name = "platformdirs"
 version = "4.12.4"
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a `user data dir`."
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "python_version == \"3.10\""
+markers = "python_version == \"3.10\" and extra == \"inspect\""
 files = [
     {file = "platformdirs-4.12.4-py3-none-any.whl", hash = "sha256:78bfb9db2a8471ed7eebe3c3c932da413911042994e699b384fbb4493fa872d7"},
     {file = "platformdirs-4.12.4.tar.gz", hash = "sha256:63743c02414e755de4e31b8f68125c1407495b86c5a006e203c01ff8b9924250"},
@@ -2500,10 +2500,10 @@ files = [
 name = "platformdirs"
 version = "4.13.0"
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a `user data dir`."
-optional = false
+optional = true
 python-versions = ">=3.11"
 groups = ["main"]
-markers = "python_version >= \"3.11\" and python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\" and python_version >= \"3.11\""
 files = [
     {file = "platformdirs-4.13.0-py3-none-any.whl", hash = "sha256:3dbcf4cd708f21cf876c4eaa90e58412bc4f033d87143f41b1493ff77c25b7e1"},
     {file = "platformdirs-4.13.0.tar.gz", hash = "sha256:1aa0b0d3f224c1f07c295121e312a5a24a180d6ae5a8425ea1784b3e3863e9c0"},
@@ -2645,10 +2645,10 @@ files = [
 name = "psutil"
 version = "7.2.2"
 description = "Cross-platform lib for process and system monitoring."
-optional = false
+optional = true
 python-versions = ">=3.6"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "psutil-7.2.2-cp313-cp313t-macosx_10_13_x86_64.whl", hash = "sha256:2edccc433cbfa046b980b0df0171cd25bcaeb3a68fe9022db0979e7aa74a826b"},
     {file = "psutil-7.2.2-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:e78c8603dcd9a04c7364f1a3e670cea95d51ee865e4efb3556a3a63adef958ea"},
@@ -2996,10 +2996,10 @@ six = ">=1.5"
 name = "python-dotenv"
 version = "1.2.4"
 description = "Read key-value pairs from a .env file and set them as environment variables"
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "python_dotenv-1.2.4-py3-none-any.whl", hash = "sha256:42269a8a5b3fd54ffa6f3d84b18abed50064717576b4ecf03dc4a55d8aa04fdc"},
     {file = "python_dotenv-1.2.4.tar.gz", hash = "sha256:f0d53e69935a851c0dcc78f3ab7aaccd8cabef0b92382b576b824212902873c0"},
@@ -3107,10 +3107,10 @@ files = [
 name = "referencing"
 version = "0.37.0"
 description = "JSON Referencing + Python"
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "referencing-0.37.0-py3-none-any.whl", hash = "sha256:381329a9f99628c9069361716891d34ad94af76e461dcb0335825aecc7692231"},
     {file = "referencing-0.37.0.tar.gz", hash = "sha256:44aefc3142c5b842538163acb373e24cce6632bd54bdb01b21ad5863489f50d8"},
@@ -3125,10 +3125,10 @@ typing-extensions = {version = ">=4.4.0", markers = "python_version < \"3.13\""}
 name = "regex"
 version = "2026.9.29"
 description = "Alternative regular expression module, to replace re."
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "regex-2026.9.29-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:9916fda742cd4eede63b286f58c06718324265d727ce0856eb1aac86d0d150d6"},
     {file = "regex-2026.9.29-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:8873c4a11c50b9989168881aeb3f08859f469d809941866aa1feefd8be5431f6"},
@@ -3308,10 +3308,10 @@ jupyter = ["ipywidgets (>=7.5.1,<9)"]
 name = "rpds-py"
 version = "0.30.0"
 description = "Python bindings to Rust's persistent data structures (rpds)"
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "python_version == \"3.10\""
+markers = "python_version == \"3.10\" and extra == \"inspect\""
 files = [
     {file = "rpds_py-0.30.0-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:679ae98e00c0e8d68a7fda324e16b90fd5260945b45d3b824c892cec9eea3288"},
     {file = "rpds_py-0.30.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:4cc2206b76b4f576934f0ed374b10d7ca5f457858b157ca52064bdfc26b9fc00"},
@@ -3434,10 +3434,10 @@ files = [
 name = "rpds-py"
 version = "2026.9.1"
 description = "Python bindings to Rust's persistent data structures (rpds)"
-optional = false
+optional = true
 python-versions = ">=3.11"
 groups = ["main"]
-markers = "python_version >= \"3.11\" and python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\" and python_version >= \"3.11\""
 files = [
     {file = "rpds_py-2026.9.1-cp311-cp311-macosx_10_12_x86_64.whl", hash = "sha256:2711d29b653b3bce48a63d18b9c6b53274669e6d6c4094dddeb4d9a0e45128b2"},
     {file = "rpds_py-2026.9.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:3231c4c0e521dafa5be0c9f114ee2c2ad46650836f2d72caa86801950c3e7044"},
@@ -3573,10 +3573,10 @@ files = [
 name = "s3fs"
 version = "2025.10.0"
 description = "Convenient Filesystem interface over S3"
-optional = false
+optional = true
 python-versions = ">=3.9"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "s3fs-2025.10.0-py3-none-any.whl", hash = "sha256:da7ef25efc1541f5fca8e1116361e49ea1081f83f4e8001fbd77347c625da28a"},
     {file = "s3fs-2025.10.0.tar.gz", hash = "sha256:e8be6cddc77aceea1681ece0f472c3a7f8ef71a0d2acddb1cc92bb6afa3e9e4f"},
@@ -3595,10 +3595,10 @@ boto3 = ["aiobotocore[boto3] (>=2.5.4,<3.0.0)"]
 name = "s3transfer"
 version = "0.15.0"
 description = "An Amazon S3 Transfer Manager"
-optional = false
+optional = true
 python-versions = ">=3.9"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "s3transfer-0.15.0-py3-none-any.whl", hash = "sha256:6f8bf5caa31a0865c4081186689db1b2534cef721d104eb26101de4b9d6a5852"},
     {file = "s3transfer-0.15.0.tar.gz", hash = "sha256:d36fac8d0e3603eff9b5bfa4282c7ce6feb0301a633566153cbd0b93d11d8379"},
@@ -3614,10 +3614,10 @@ crt = ["botocore[crt] (>=1.37.4,<2.0a.0)"]
 name = "semver"
 version = "3.1.0"
 description = "Python helper for Semantic Versioning (https://semver.org)"
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "semver-3.1.0-py3-none-any.whl", hash = "sha256:6e4998f8b4762acdfea85f9bfd5b4032e0bb50038dc04bf82011b42d5d1145c5"},
     {file = "semver-3.1.0.tar.gz", hash = "sha256:14bc073439513d7773662a338f4db9829cf16c12b74b9568e2d2689975fbd7fc"},
@@ -3642,10 +3642,10 @@ files = [
 name = "shortuuid"
 version = "1.0.13"
 description = "A generator library for concise, unambiguous and URL-safe UUIDs."
-optional = false
+optional = true
 python-versions = ">=3.6"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "shortuuid-1.0.13-py3-none-any.whl", hash = "sha256:a482a497300b49b4953e15108a7913244e1bb0d41f9d332f5e9925dba33a3c5a"},
     {file = "shortuuid-1.0.13.tar.gz", hash = "sha256:3bb9cf07f606260584b1df46399c0b87dd84773e7b25912b7e391e30797c5e72"},
@@ -3679,10 +3679,10 @@ files = [
 name = "soupsieve"
 version = "2.10"
 description = "A modern CSS selector implementation for Beautiful Soup."
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "python_version < \"3.12\""
+markers = "python_version < \"3.12\" and extra == \"inspect\""
 files = [
     {file = "soupsieve-2.10-py3-none-any.whl", hash = "sha256:8596eb8967d744174820280fa62b4542a2e955bfaccca73ed8a13c6eb8e9b502"},
     {file = "soupsieve-2.10.tar.gz", hash = "sha256:49e9380d7d2905463583bafe285e818c7366a9ed7b3aee221c1ac79c905d8bc0"},
@@ -3692,10 +3692,10 @@ files = [
 name = "soupsieve"
 version = "3.0.3"
 description = "A modern CSS selector implementation for Beautiful Soup."
-optional = false
+optional = true
 python-versions = ">=3.11.5"
 groups = ["main"]
-markers = "python_version >= \"3.12\" and python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\" and python_version >= \"3.12\""
 files = [
     {file = "soupsieve-3.0.3-py3-none-any.whl", hash = "sha256:fa30e3ba4809cb81ce1f3209f2fbe3e779fc445f0439bc147a0d7c4601743f21"},
     {file = "soupsieve-3.0.3.tar.gz", hash = "sha256:7dcf6022eed0399eb9934a75e020148f7a2024c37b7dfcd3cf2c5505d69c364e"},
@@ -3743,10 +3743,10 @@ Pillow = ">=12"
 name = "starlette"
 version = "1.7.0"
 description = "The little ASGI library that shines."
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "python_version == \"3.10\""
+markers = "python_version == \"3.10\" and extra == \"inspect\""
 files = [
     {file = "starlette-1.7.0-py3-none-any.whl", hash = "sha256:67f8e99895493dd2911a03f11314af6ceebeae4e704bb9f43dfc6a9db151c93e"},
     {file = "starlette-1.7.0.tar.gz", hash = "sha256:c79f74ea63cff761804fbbfb182f1e0b440c2d07b164d24700c5a1bab5d6ff5d"},
@@ -3763,10 +3763,10 @@ full = ["httpx (>=0.27.0,<0.29.0)", "httpx2 (>=2.0.0)", "itsdangerous", "jinja2"
 name = "starlette"
 version = "1.8.0"
 description = "The little ASGI library that shines."
-optional = false
+optional = true
 python-versions = ">=3.11"
 groups = ["main"]
-markers = "python_version >= \"3.11\" and python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\" and python_version >= \"3.11\""
 files = [
     {file = "starlette-1.8.0-py3-none-any.whl", hash = "sha256:dfdd6b29c26483288088d990eee59631dedadd66ce20d203402a7ca8e3c4656f"},
     {file = "starlette-1.8.0.tar.gz", hash = "sha256:1565dc0b35d5737a271ed1e0e04e949f4e81198799f216d2667b0a0fb9cf9522"},
@@ -3783,10 +3783,10 @@ full = ["httpx (>=0.27.0,<0.29.0)", "httpx2 (>=2.0.0)", "itsdangerous", "jinja2"
 name = "tenacity"
 version = "9.2.1"
 description = "Retry code until it succeeds"
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "tenacity-9.2.1-py3-none-any.whl", hash = "sha256:9e56f17539296baab7beabb08b92f6ee3d7be92d8be72d763360677c2ad6580e"},
     {file = "tenacity-9.2.1.tar.gz", hash = "sha256:a606b5c808d0cded4a359d5b9932d867ff2a6a6b64d37350260fd01bbdf83839"},
@@ -3800,10 +3800,10 @@ test = ["pytest", "tornado (>=6.0)"]
 name = "textual"
 version = "6.2.1"
 description = "Modern Text User Interface framework"
-optional = false
+optional = true
 python-versions = "<4.0.0,>=3.8.1"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "textual-6.2.1-py3-none-any.whl", hash = "sha256:3c7190633cd4d8bfe6049ae66808b98da91ded2edb85cef54e82bf77b03d2a54"},
     {file = "textual-6.2.1.tar.gz", hash = "sha256:4699d8dfae43503b9c417bd2a6fb0da1c89e323fe91c4baa012f9298acaa83e1"},
@@ -3823,10 +3823,10 @@ syntax = ["tree-sitter (>=0.25.0) ; python_version >= \"3.10\"", "tree-sitter-ba
 name = "tiktoken"
 version = "0.14.0"
 description = "tiktoken is a fast BPE tokeniser for use with OpenAI's models"
-optional = false
+optional = true
 python-versions = ">=3.9"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "tiktoken-0.14.0-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:3b12e54f8bec91433e41aff65d8d1f209a4f678081163747079806e5361f6c91"},
     {file = "tiktoken-0.14.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:94f77b60a8ab23580db19ae822744c9716c1720020d2179ca5605112d12326f1"},
@@ -3998,10 +3998,10 @@ files = [
 name = "universal-pathlib"
 version = "0.3.10"
 description = "pathlib api extended to use fsspec backends"
-optional = false
+optional = true
 python-versions = ">=3.9"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "universal_pathlib-0.3.10-py3-none-any.whl", hash = "sha256:dfaf2fb35683d2eb1287a3ed7b215e4d6016aa6eaf339c607023d22f90821c66"},
     {file = "universal_pathlib-0.3.10.tar.gz", hash = "sha256:4487cbc90730a48cfb64f811d99e14b6faed6d738420cd5f93f59f48e6930bfb"},
@@ -4039,10 +4039,10 @@ zstd = ["backports-zstd (>=1.0.0) ; python_version < \"3.14\""]
 name = "uvicorn"
 version = "0.54.0"
 description = "The lightning-fast ASGI server."
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "uvicorn-0.54.0-py3-none-any.whl", hash = "sha256:505bdb0f318731d45f1f712071fc781a8981f6847a31c902c9f5e652d4f67faf"},
     {file = "uvicorn-0.54.0.tar.gz", hash = "sha256:a2e33cbfaa0306f8e6b0c13e0cb89d7d7a2da3e62b90c66e18c33d9807b28620"},
@@ -4060,10 +4060,10 @@ standard = ["httptools (>=0.8.0)", "python-dotenv (>=0.13)", "pyyaml (>=5.1)", "
 name = "wrapt"
 version = "1.17.3"
 description = "Module for decorators, wrappers and monkey patching."
-optional = false
+optional = true
 python-versions = ">=3.8"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "wrapt-1.17.3-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:88bbae4d40d5a46142e70d58bf664a89b6b4befaea7b2ecc14e03cedb8e06c04"},
     {file = "wrapt-1.17.3-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:e6b13af258d6a9ad602d57d889f83b9d5543acd471eee12eb51f5b01f8eb1bc2"},
@@ -4447,10 +4447,10 @@ propcache = ">=0.2.1"
 name = "zipfile-zstd"
 version = "0.0.4"
 description = "Monkey patch the standard zipfile module to enable Zstandard support"
-optional = false
+optional = true
 python-versions = ">=3.6"
 groups = ["main"]
-markers = "python_version < \"3.14\""
+markers = "python_version < \"3.14\" and extra == \"inspect\""
 files = [
     {file = "zipfile-zstd-0.0.4.tar.gz", hash = "sha256:c1498e15b7922a3d1af0ea55df8b11b2af4e8f7e0e80e414e25d66899f7def89"},
     {file = "zipfile_zstd-0.0.4-py3-none-any.whl", hash = "sha256:c8e07be35765c072eb7b1be715c89ecb248a1127b014e12a9b8ac7db2600c166"},
@@ -4463,10 +4463,10 @@ zstandard = ">=0.15.0"
 name = "zipp"
 version = "4.1.1"
 description = "Backport of pathlib-compatible object wrapper for zip files"
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "zipp-4.1.1-py3-none-any.whl", hash = "sha256:8979f52d874162f485ff2981e3891f3a3317b7a3dd43ff1e1775b9304f307a9c"},
     {file = "zipp-4.1.1.tar.gz", hash = "sha256:7ebb7a44c021b29fd8dbd7cce6812d0d7b5b454521f93cc71af6ccd155aaa70b"},
@@ -4484,10 +4484,10 @@ type = ["pytest-mypy (>=1.0.1) ; platform_python_implementation != \"PyPy\""]
 name = "zstandard"
 version = "0.25.0"
 description = "Zstandard bindings for Python"
-optional = false
+optional = true
 python-versions = ">=3.9"
 groups = ["main"]
-markers = "python_version < \"3.15\""
+markers = "python_version < \"3.15\" and extra == \"inspect\""
 files = [
     {file = "zstandard-0.25.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:e59fdc271772f6686e01e1b3b74537259800f57e24280be3f29c8a0deb1904dd"},
     {file = "zstandard-0.25.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:4d441506e9b372386a5271c64125f72d5df6d2a8e8a2a45a0ae09b03cb781ef7"},
@@ -4593,7 +4593,10 @@ files = [
 [package.extras]
 cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and python_version < \"3.14\"", "cffi (>=2.0.0b) ; platform_python_implementation != \"PyPy\" and python_version >= \"3.14\""]
 
+[extras]
+inspect = ["inspect-ai"]
+
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "a027478072d5f86480486a0ca304244178ff9e3b00fe38adc59d4a600e6f80c9"
+content-hash = "3d60db49675bbadf9ecd67dff407618a9f11ec089e9fb62902edfb2e69bca74e"

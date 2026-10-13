@@ -13,8 +13,11 @@ invalid paths on more than 50% of the puzzles.
 ```bash
 git clone https://github.com/lkaesberg/SPaRC.git
 cd SPaRC
-pip install -e .
+pip install -e ".[inspect]"
 ```
+
+Inspect AI is an optional extra of the package (`inspect`), so a plain `pip install sparc-puzzle` does not
+install it.
 
 ## Run
 
@@ -33,7 +36,7 @@ inspect eval sparc --model openai/gpt-4.1-mini -T 'difficulty_levels=[1,2]'
 ```
 
 The commands above assume the editable install from the Install section. With a normal install, for example
-`pip install git+https://github.com/lkaesberg/SPaRC.git`, Inspect adds the package name to the task name, so
+`pip install "sparc-puzzle[inspect]"`, Inspect adds the package name to the task name, so
 run `inspect eval sparc/sparc` and `inspect eval sparc/sparc_hard` instead. From a checkout you can also name
 the file: `inspect eval sparc/tasks.py@sparc`.
 

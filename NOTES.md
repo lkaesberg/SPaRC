@@ -96,6 +96,20 @@ as `validate_solution` here.
   off. Checked in a browser: sorting, tabs, empty cells sorting last, and no sideways scrolling at 375 px width.
   The citation block on the site now has the right pages.
 
+## Inspect as an optional extra (2026-10-14)
+
+- `inspect-ai` moved from the core dependencies into the `inspect` extra. Install it with
+  `pip install "sparc-puzzle[inspect]"` (or `pip install -e ".[inspect]"` from a checkout). A plain install now
+  has 52 packages (291 MB) instead of 105 (404 MB), checked in fresh Python 3.12 environments. Other harnesses can
+  depend on the package without pulling in Inspect.
+- `sparc/sparc.py` imported `httpx` without declaring it. It only arrived through `inspect-ai`, because `openai`
+  3.x uses `httpx2`. The CLI now uses `openai.Timeout` (present in openai 2.7.1 and 3.29.0), so `httpx` is no
+  longer needed.
+- Checks: every module except `sparc.tasks` imports in a plain install, and `sparc --help` runs. With the extra,
+  `inspect eval sparc/sparc --model mockllm/model --limit 5` runs. `pytest` passes 6 tests with Inspect installed,
+  and `tests/test_inspect_task.py` is skipped without it. `poetry lock` changed no package versions.
+- PyPI 0.6.0 still has `inspect-ai` as a core dependency. The change reaches PyPI with the next release.
+
 ## Reproduced numbers
 
 ### Paper-model check (Task B4)

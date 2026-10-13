@@ -122,15 +122,16 @@ analysis = analyze_path(extracted_path, puzzle)
 
 ### 3. Running SPaRC with Inspect AI
 
-SPaRC is also an [Inspect AI](https://inspect.aisi.org.uk/) task. After `pip install -e .`:
+SPaRC is also an [Inspect AI](https://inspect.aisi.org.uk/) task. Inspect is an optional extra, so install it
+with the package. From a checkout, run `pip install -e ".[inspect]"`, then:
 
 ```bash
 inspect eval sparc --model openai/gpt-4.1-mini            # all 500 test puzzles
 inspect eval sparc_hard --model openai/gpt-4.1-mini       # the 89 hard (level 5) puzzles
 ```
 
-With a normal (non-editable) install, for example `pip install git+https://github.com/lkaesberg/SPaRC.git`,
-the task names carry the package prefix: `inspect eval sparc/sparc` and `inspect eval sparc/sparc_hard`.
+With a normal (non-editable) install, for example `pip install "sparc-puzzle[inspect]"`, the task names carry
+the package prefix: `inspect eval sparc/sparc` and `inspect eval sparc/sparc_hard`.
 
 See [sparc/README.md](sparc/README.md) for options, scoring and reproduced numbers.
 

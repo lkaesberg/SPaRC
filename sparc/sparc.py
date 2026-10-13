@@ -16,8 +16,7 @@ from sparc.process_puzzle import process_puzzle, process_puzzle_step_by_step, pr
 from sparc.tables import create_statistics_table, create_detailed_results_table
 from sparc.prompt import AVAILABLE_PROMPTS, auto_detect_prompt
 from datasets import load_dataset
-from openai import AsyncOpenAI, APIConnectionError, APITimeoutError
-import httpx
+from openai import AsyncOpenAI, APIConnectionError, APITimeoutError, Timeout
 import aiohttp
 
 console = Console()
@@ -789,7 +788,7 @@ def main() -> None:
     console.print("[dim]💡 Press Ctrl+C to gracefully stop after current batch[/]")
 
     # Configure timeout for larger models that may take longer to respond
-    timeout = httpx.Timeout(args.timeout, connect=30.0)
+    timeout = Timeout(args.timeout, connect=30.0)
     
     client = AsyncOpenAI(
         api_key=args.api_key,
