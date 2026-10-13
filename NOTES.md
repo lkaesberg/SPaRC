@@ -92,7 +92,19 @@ The website change for Task E lives in the separate repo `lkaesberg/SPaRCWebsite
 
 ## Reproduced numbers
 
-_(filled in by Tasks B/E)_
+Inspect task `sparc` (version 1-A), full 500-puzzle test split, run on 2026-10-13 through OpenRouter. The
+paper numbers are from Table 6 (accuracy) and Table 7 (invalid path).
+
+| Model | Accuracy, paper | Accuracy, reproduced | Invalid path, paper | Invalid path, reproduced | Log |
+|---|---|---|---|---|---|
+| Gemma-3 27B (`openrouter/google/gemma-3-27b-it`) | 1.2% | 0.4% | 88.0% | 81.2% | `paper-boost/runs/inspect-full/2026-10-13T10-46-24-00-00_sparc_bYgXdrpjp28dgyieWivC6Q.eval` |
+| Qwen 2.5 72B (`openrouter/qwen/qwen-2.5-72b-instruct`) | 0.4% | 0.4% | 90.6% | 95.4% | `paper-boost/runs/inspect-full/2026-10-13T10-52-12-00-00_sparc_MJr8B44DVMHrQu6m4hhReT.eval` |
+
+Both accuracies are within the 2-point limit. Both models are close to 0%, so the check is weak. o4-mini (paper:
+15.8%) could not be rerun: the OpenRouter account requires zero data retention, and OpenAI's o4-mini endpoint
+there does not meet it. This is an account setting; we did not change it.
+
+`--limit 50` smoke run (Gemma-3 27B): 4.0% (2/50), 80% invalid, finished without errors.
 
 ## Commands left for a human
 
@@ -109,6 +121,59 @@ _(filled in by Tasks B/E)_
   cd paper-boost/SPaRC-hf && hf upload lkaesberg/SPaRC README.md README.md --repo-type dataset --commit-message "Fix SPaRC citation pages (10359--10390); add task_categories, language, tags"
   ```
 
+### Task B (Inspect Evals register)
+The register works through an issue form, not a hand-written PR. A bot reads the issue, writes
+`register/sparc/eval.yaml`, and opens the PR. Steps:
+
+1. Merge `task-b-inspect` (or the whole stack) into `main`. Then take the full 40-character SHA of the `main`
+   commit that contains `sparc/tasks.py`. The SHA used during this work is `42e501dccc40c0f30b4d2ff024a9daf7b41dd9bf`
+   (branch `task-b-inspect`). It also works, but a `main` SHA is cleaner.
+2. Open https://github.com/UKGovernmentBEIS/inspect_evals/issues/new?template=register-submission.yml and fill in:
+   - arXiv URL: `https://arxiv.org/abs/2505.16686v2`
+   - Source URL: `https://github.com/lkaesberg/SPaRC/blob/<SHA>/sparc/tasks.py#L141` (line 141 is the `@task`
+     of `sparc`).
+   - Maintainers: `lkaesberg`
+   - Ask for the eval id `sparc`. Mention that `sparc_hard` (level 5 only) exists in the same file. The register
+     takes one task per entry, so `sparc_hard` is not listed separately.
+3. When the bot's PR appears, upload two full log files at https://logfile-upload.generality.workers.dev/ and
+   confirm on the PR. Use the two logs in the table above. They contain no local paths, usernames or keys
+   (checked); the only repo reference is the public commit `0795f03`.
+
+### Task C (lm-evaluation-harness)
+- Branch `add-sparc-task` on `lkaesberg/lm-evaluation-harness` (pushed). It is based on the current
+  `EleutherAI/lm-evaluation-harness` `main` (2 commits ahead, 0 behind). To open the PR:
+  ```bash
+  gh pr create -R EleutherAI/lm-evaluation-harness --head lkaesberg:add-sparc-task --base main --title "Add SPaRC (spatial pathfinding) task"
+  ```
+- You already have an open PR from an older attempt: https://github.com/EleutherAI/lm-evaluation-harness/pull/3262
+  (from `lkaesberg:main`, merge conflicts, no reviews). Close it in favour of the new branch, or force-push the
+  new branch onto it. The old one also changes `lm_eval/models/huggingface.py`, which is unrelated.
+- Smoke run (`--limit 20`, Gemma-3 27B via OpenRouter): finished, 4 puzzles per level, acc 0.0, invalid_path 0.80.
+- Tests: `pytest tests/test_tasks.py` passes (29 tests; 26 with `-k sparc`) once the sparc YAMLs are listed in
+  `.github/outputs/tasks_all_changed_and_modified_files.txt`, which is how CI selects them. The pre-commit hooks pass.
+
 ## Third-party guide differences
 
-_(filled in per task)_
+- **Task B, folder name.** The handoff asks for an `inspect/` package. A package named `inspect` hides Python's
+  standard-library `inspect` module and breaks imports. The register lint also wants the task inside a normal
+  package. The task is therefore `sparc/tasks.py` inside the existing `sparc` package, with its README at
+  `sparc/README.md`.
+- **Task B, `inspect eval sparc`.** The task is registered through `[project.entry-points.inspect_ai]`. With an
+  editable install, `inspect eval sparc` works from any folder (checked). The namespaced form
+  `inspect eval sparc/sparc` only works for a non-editable install, because the distribution is called
+  `sparc-puzzle`, not `sparc`. The file form `inspect eval sparc/tasks.py@sparc` always works.
+- **Task B, dependency.** Inspect 0.3.279 needs `openai>=3.4` for every OpenAI-compatible provider, but SPaRC
+  pinned `openai<3`. The pin is now `>=2.7.1,<4.0.0`. The `sparc` CLI was checked with openai 3.29 (2 puzzles,
+  no errors), and `poetry.lock` now locks openai 3.29.0. `inspect-ai` carries a `python_version < "3.15"`
+  marker, because one of its dependencies does not support Python 3.15 yet.
+- **Task B, submission path.** The register uses an issue form plus a bot PR (see above), not a PR written by
+  hand. It also wants full logs from two models, so Task B has two full runs instead of one.
+- **Task B, model.** The handoff says `openai/<model>`. Only an OpenRouter key was available, so the runs use
+  `openrouter/...` ids.
+- **Task C, layout.** The lm-eval docs recommend a group with one subtask per difficulty level (the `mmlu_pro`
+  pattern). That layout fails the repo's own `tests/test_tasks.py`, which loads the group and its subtasks
+  together and raises "Duplicate task". The task is therefore a single `sparc` task that reports `acc`,
+  `acc_level_1` … `acc_level_5` and `invalid_path`, as `catalan_bench/cieacova` does. `sparc_hard` is a separate
+  task.
+- **Task C, test command.** `pytest tests/test_tasks.py -k sparc` only selects sparc when the changed-files list
+  above exists, as in CI.
