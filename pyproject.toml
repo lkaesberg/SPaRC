@@ -13,11 +13,15 @@ dependencies = [
     "tqdm (>=4.60.0,<5.0.0)",
     "rich (>=13.0.0,<14.0.0)",
     "sparc-gym (>=0.2.5,<0.3.0)",
-    "sparc-visualization (>=0.1.3)"
+    "sparc-visualization (>=0.1.3)",
+    "inspect-ai (>=0.3.279)"
 ]
 
 [project.scripts]
 sparc = "sparc.sparc:main"
+
+[project.entry-points.inspect_ai]
+sparc = "sparc.tasks"
 
 [tool.poetry]
 name = "sparc-puzzle"
@@ -37,3 +41,4 @@ sparc-visualization = ">=0.1.3"
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
