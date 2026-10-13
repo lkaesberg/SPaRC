@@ -1,6 +1,9 @@
 """Tests for the Inspect task in sparc/tasks.py (offline model: mockllm)."""
 
 import pytest
+
+pytest.importorskip("inspect_ai", reason="needs the inspect extra: pip install -e '.[inspect]'")
+
 from datasets import load_dataset
 from inspect_ai import eval
 from inspect_ai.model import ModelOutput, get_model
