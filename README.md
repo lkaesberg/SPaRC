@@ -129,6 +129,9 @@ inspect eval sparc --model openai/gpt-4.1-mini            # all 500 test puzzles
 inspect eval sparc_hard --model openai/gpt-4.1-mini       # the 89 hard (level 5) puzzles
 ```
 
+With a normal (non-editable) install, for example `pip install git+https://github.com/lkaesberg/SPaRC.git`,
+the task names carry the package prefix: `inspect eval sparc/sparc` and `inspect eval sparc/sparc_hard`.
+
 See [sparc/README.md](sparc/README.md) for options, scoring and reproduced numbers.
 
 ## CLI Reference

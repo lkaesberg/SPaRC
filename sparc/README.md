@@ -32,7 +32,10 @@ inspect eval sparc --model openai/gpt-4.1-mini --limit 50
 inspect eval sparc --model openai/gpt-4.1-mini -T 'difficulty_levels=[1,2]'
 ```
 
-From a checkout you can also name the file: `inspect eval sparc/tasks.py@sparc`.
+The commands above assume the editable install from the Install section. With a normal install, for example
+`pip install git+https://github.com/lkaesberg/SPaRC.git`, Inspect adds the package name to the task name, so
+run `inspect eval sparc/sparc` and `inspect eval sparc/sparc_hard` instead. From a checkout you can also name
+the file: `inspect eval sparc/tasks.py@sparc`.
 
 | Task | Puzzles | Description |
 |---|---|---|
