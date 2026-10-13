@@ -144,12 +144,10 @@ four newer-model runs, plus the lm-eval full run and the verifiers runs that ran
 
 ## Commands left for a human
 
-1. **Merge.** Merge the stacked SPaRC branches in order (`task-a-citations`, then `task-b-inspect`, then
-   `task-e-leaderboard`). The website is already live: `SPaRCWebsite` `task-e-leaderboard` was fast-forwarded into
-   `master` on 2026-10-13 (`48c3a7f`), and GitHub Pages built it. Until the SPaRC and Spatial-Gym branches are merged,
-   a few things on the site point at code that is not on `main` yet: the "Evaluate a Model" commands
-   (`pip install git+https://github.com/lkaesberg/SPaRC.git` and the Spatial-Gym environment), the link to
-   `sparc/README.md`, and the live data URL (the page falls back to its bundled copy of `results.json`).
+1. **Merge.** Done on 2026-10-13. The SPaRC stack (`task-a-citations`, `task-b-inspect`, `task-e-leaderboard`) and
+   the Spatial-Gym stack (`task-a-citations`, `task-d-verifiers`) were fast-forwarded into `main`; Spatial-Gym CI
+   passed. The website is live from `SPaRCWebsite` `master`, including the redesign (PR #1) and the collapsible
+   leaderboard (`6aa10f4`). The site's leaderboard now loads `leaderboard/results.json` from SPaRC `main`.
 2. **PyPI release (A5).** The PyPI page for `sparc-puzzle` (0.5.9) still shows the wrong pages. After the merge:
    ```bash
    gh release create v0.5.10 -R lkaesberg/SPaRC --target main --title v0.5.10 --notes "Fix citation (EMNLP 2025 pages 10359--10390); related-work section; Inspect task"
