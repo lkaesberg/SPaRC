@@ -9,3 +9,6 @@ sparc/__pycache__/
 uv.lock
 __pycache__
 !leaderboard/results.json
+
+# Inspect AI eval logs (written by the tests and by inspect eval)
+logs/
