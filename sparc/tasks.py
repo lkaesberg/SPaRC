@@ -7,6 +7,7 @@ only if the extracted path exactly matches one of its stored solutions.
 Run from a checkout:
 
     inspect eval sparc/tasks.py@sparc --model openai/gpt-4.1-mini
+    inspect eval sparc/tasks.py@sparc_hard --model openai/gpt-4.1-mini
 """
 
 from typing import Any
@@ -63,6 +64,21 @@ def record_to_sample(record: dict[str, Any]) -> Sample:
     )
 
 
+def interleave_by_difficulty(samples: list[Sample]) -> list[Sample]:
+    """Order samples round-robin over difficulty levels 1..5.
+
+    Dataset order is kept within each level, so `--limit n` always covers all
+    levels evenly and the full run is unaffected.
+    """
+    by_level: dict[int, list[Sample]] = {}
+    for sample in samples:
+        assert sample.metadata is not None
+        by_level.setdefault(sample.metadata["difficulty"], []).append(sample)
+    queues = [by_level[level] for level in sorted(by_level)]
+    longest = max(len(q) for q in queues)
+    return [q[i] for i in range(longest) for q in queues if i < len(q)]
+
+
 def sparc_dataset(
     split: str = "test", difficulty_levels: list[int] | None = None
 ) -> MemoryDataset:
@@ -81,7 +97,7 @@ def sparc_dataset(
     name = f"sparc-{split}" + (
         "-level" + "".join(map(str, sorted(difficulty_levels))) if difficulty_levels else ""
     )
-    return MemoryDataset(samples, name=name, location=DATASET_PATH)
+    return MemoryDataset(interleave_by_difficulty(samples), name=name, location=DATASET_PATH)
 
 
 @metric
@@ -137,3 +153,8 @@ def sparc(difficulty_levels: list[int] | None = None, split: str = "test") -> Ta
         version="1-A",
     )
 
+
+@task
+def sparc_hard(split: str = "test") -> Task:
+    """The paper's "hard" subset: the 89 difficulty-level-5 test puzzles."""
+    return sparc(difficulty_levels=[5], split=split)
