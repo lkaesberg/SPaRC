@@ -4599,4 +4599,4 @@ inspect = ["inspect-ai"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "3d60db49675bbadf9ecd67dff407618a9f11ec089e9fb62902edfb2e69bca74e"
+content-hash = "68ff2b5c2a60f6cc44173d018f349964365f0e5b1a37d76a8effec3ea3996ca0"

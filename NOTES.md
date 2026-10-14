@@ -110,6 +110,23 @@ as `validate_solution` here.
   and `tests/test_inspect_task.py` is skipped without it. `poetry lock` changed no package versions.
 - PyPI 0.6.0 still has `inspect-ai` as a core dependency. The change reaches PyPI with the next release.
 
+## Register lint fixes (2026-10-14)
+
+The register entry (UKGovernmentBEIS/inspect_evals#2687, from issue #2686) was first pinned to `1bb72c3`, where
+inspect-evals-lint 0.9.0 met 14 of 16 checks. Fixed on `main`:
+
+- `external_dependencies`: `aiohttp` (`sparc/sparc.py`), `gymnasium` and `numpy` (`sparc/process_puzzle.py`) were
+  imported but only arrived through other packages. All three are now in `[project].dependencies`, with the
+  lower bounds `sparc-gym` already uses for gymnasium and numpy.
+- `init_exports`: `sparc/__init__.py` lists `sparc` and `sparc_hard` in `__all__` and loads them on first access
+  through a module `__getattr__`. A plain `from .tasks import ...` would make `import sparc` fail without the
+  Inspect extra. `tests/test_package.py` checks that `import sparc` does not load `inspect_ai`.
+- The register requires `inspect_ai` as a dependency, and its usage section runs `uv sync`. A `dev` dependency
+  group with `inspect-ai` makes `uv sync` install it, while `pip install sparc-puzzle` stays without Inspect.
+- Checks: the lint (`uvx inspect-evals-lint@0.9.0 --preset single-eval --task sparc/tasks.py`) passes every rule
+  except `eval_yaml`, which does not apply to register entries. `pytest` passes 9 tests with Inspect and the
+  package tests pass without it. `poetry lock` only changed the content hash.
+
 ## Reproduced numbers
 
 ### Paper-model check (Task B4)
