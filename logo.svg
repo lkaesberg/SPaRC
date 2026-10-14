@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="SPaRC">
+  <title>SPaRC</title>
+  <rect width="120" height="120" rx="26" fill="#132e2a"/>
+  <path d="M26 26H94M26 60H94M26 94H94M26 26V94M60 26V94M94 26V94" fill="none" stroke="#2b4a44" stroke-width="12" stroke-linecap="round"/>
+  <g fill="#00a07a">
+    <rect x="32" y="32" width="22" height="22" rx="4"/>
+    <rect x="66" y="32" width="22" height="22" rx="4"/>
+    <rect x="32" y="66" width="22" height="22" rx="4"/>
+    <rect x="66" y="66" width="22" height="22" rx="4"/>
+  </g>
+  <path d="M26 94H94V60H26V26H108" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="26" cy="94" r="12" fill="#fff"/>
+</svg>
