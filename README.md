@@ -228,6 +228,31 @@ If you use SPaRC in your research, please cite:
 }
 ```
 
+If you use the step-by-step environment, please also cite Spatial-Gym:
+
+```bibtex
+@misc{kaesberg2026spatialgym,
+  title  = {Mind the Gap Between Spatial Reasoning and Acting! Step-by-Step Evaluation of Agents With Spatial-Gym},
+  author = {Kaesberg, Lars Benedikt and Yang, Tianyu and Bauer, Niklas and Ruas, Terry and Wahle, Jan Philip and Gipp, Bela},
+  year   = {2026},
+  eprint = {2604.09338},
+  archivePrefix = {arXiv}
+}
+```
+
+If you use the visual scaffolds, please also cite:
+
+```bibtex
+@misc{kaesberg2026visualprompting,
+  title  = {Is Visual Prompting All You Need? Studying VLM Spatial Reasoning under Progressive Visual Scaffolds},
+  author = {Kaesberg, Lars Benedikt and Yang, Tianyu and Wunderlich, Florian Valentin and Ruas, Terry and Kurzawe, Daniel and Wahle, Jan Philip and Gipp, Bela},
+  year   = {2026},
+  eprint = {2608.21170},
+  archivePrefix = {arXiv},
+  note   = {Accepted at Findings of EMNLP 2026}
+}
+```
+
 ## Related work from our group
 
 | Paper | Venue | Links |
