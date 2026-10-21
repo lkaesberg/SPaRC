@@ -9,6 +9,7 @@ from inspect_ai import eval
 from inspect_ai.model import ModelOutput, get_model
 
 from sparc.prompts.single_shot import get_prompt
+from sparc.prompts.single_shot_paper import get_prompt as get_paper_prompt
 from sparc.tasks import (
     DATASET_PATH,
     DATASET_REVISION,
@@ -85,3 +86,44 @@ def test_e2e_gold_answer_is_correct(records):
 
 def test_sparc_scorer_is_the_task_scorer():
     assert sparc().scorer[0].__qualname__ == sparc_scorer().__qualname__
+
+
+def test_default_prompt_states_the_generator_rules(records):
+    user = record_to_sample(records[0]).input[1].content
+    assert "Any rule symbol can be the partner" in user
+    assert "(star or square)" not in user
+    assert "subtract area from the positive polyshapes" in user
+    assert "exact same shape and color" not in user
+
+
+def test_paper_prompt_is_unchanged(records):
+    record = records[0]
+    sample = record_to_sample(record, prompt="paper")
+    assert sample.input[1].content == get_paper_prompt(record)["user"]
+    assert "(star or square)" in sample.input[1].content
+    task = sparc(prompt="paper")
+    assert task.metadata["prompt"] == "paper"
+    assert "(star or square)" in task.dataset[0].input[1].content
+
+
+def test_custom_prompt_and_system_message(records):
+    record = records[0]
+    sample = record_to_sample(
+        record,
+        system_prompt="Solve it.",
+        prompt_template="Grid {width}x{height} from {start} to {end}:\n{grid}\n{polyshapes}",
+    )
+    assert sample.input[0].content == "Solve it."
+    assert sample.input[1].content.startswith(
+        f"Grid {record['grid_size']['width']}x{record['grid_size']['height']} from "
+    )
+
+
+def test_subset_and_version():
+    task = sparc(subset="stars")
+    assert len(task.dataset) > 0 and task.dataset.name == "sparc-stars-test"
+    assert task.version == "2-A" and task.metadata == {"subset": "stars", "prompt": "default"}
+    with pytest.raises(ValueError):
+        sparc(subset="everything")
+    with pytest.raises(ValueError):
+        sparc(prompt="v3")

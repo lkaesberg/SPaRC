@@ -137,7 +137,9 @@ inspect eval sparc_hard --model openai/gpt-4.1-mini       # the 89 hard (level 5
 With a normal (non-editable) install, for example `pip install "sparc-puzzle[inspect]"`, the task names carry
 the package prefix: `inspect eval sparc/sparc` and `inspect eval sparc/sparc_hard`.
 
-See [sparc/README.md](sparc/README.md) for options, scoring and reproduced numbers.
+Since task version 2-A, the prompt states the star, polyshape and negative polyshape rules the way the puzzles were
+built. Add `-T prompt=paper` for the paper's original wording. See [sparc/README.md](sparc/README.md) for options,
+the changelog, scoring and reproduced numbers.
 
 ## CLI Reference
 

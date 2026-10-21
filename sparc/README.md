@@ -1,7 +1,9 @@
 # SPaRC for Inspect AI
 
-This folder contains SPaRC as an [Inspect AI](https://inspect.aisi.org.uk/) task (`tasks.py`). It uses the prompt
-from the paper and scores answers with the SPaRC validator.
+This folder contains SPaRC as an [Inspect AI](https://inspect.aisi.org.uk/) task (`tasks.py`). It uses the paper's
+single-shot prompt and scores answers with the SPaRC validator. Since task version 2-A, the prompt states the star,
+polyshape and negative polyshape rules the way the puzzles were built (see the changelog below). The paper's original
+wording is still available with `-T prompt=paper`.
 
 SPaRC has 1,000 2D grid pathfinding puzzles, and the test split has 500 of them. The model must draw a line from
 the start node to the end node that satisfies every rule on the grid. Humans solve 98.0% of the puzzles (94.5%
@@ -33,6 +35,12 @@ inspect eval sparc --model openai/gpt-4.1-mini --limit 50
 
 # chosen levels only
 inspect eval sparc --model openai/gpt-4.1-mini -T 'difficulty_levels=[1,2]'
+
+# one of the per-rule configs, for example only star puzzles
+inspect eval sparc --model openai/gpt-4.1-mini -T subset=stars
+
+# the paper's original prompt wording (task version 1)
+inspect eval sparc --model openai/gpt-4.1-mini -T prompt=paper
 ```
 
 The commands above assume the editable install from the Install section. With a normal install, for example
@@ -45,14 +53,29 @@ the file: `inspect eval sparc/tasks.py@sparc`.
 | `sparc` | 500 | The full test split. |
 | `sparc_hard` | 89 | Only difficulty level 5, which the paper calls "hard". |
 
-Task parameters of `sparc`: `difficulty_levels` (list of levels 1 to 5, default all) and `split` (`test` by
-default; `train` is meant for development).
+Task parameters of `sparc`:
+
+* `difficulty_levels`: list of levels 1 to 5, default all.
+* `split`: `test` by default; `train` is meant for development.
+* `subset`: the dataset config, `all` by default. See the Dataset section.
+* `prompt`: `default` (the corrected rule wording) or `paper` (the paper's original wording).
+* `system_prompt`: replaces the system message.
+* `prompt_template`: replaces the user message. It is filled in with `{width}`, `{height}`, `{start}`, `{end}`,
+  `{grid}` and `{polyshapes}` (see `sparc.prompts.single_shot.prompt_fields`), so you can try other prompting
+  strategies on the same puzzles.
+
+`sparc_hard` takes `split` and `prompt`.
 
 ## Dataset
 
 The task loads `lkaesberg/SPaRC` (config `all`, split `test`) from Hugging Face, pinned to revision
 `e2d908363190e9a244f931df2654a501facc90a7`. Each sample stores the puzzle and its difficulty level
 (`metadata["difficulty"]`), so results can be grouped by level.
+
+The `all` config is the benchmark: 500 train and 500 test puzzles that mix all rule types. It is not the union of
+the other configs. The per-rule configs (`dots`, `gaps`, `stars`, `stones`, `triangles`, `polys`, `polys_ylops`,
+`stones_stars`, `dots_stars_polys`, `gaps_dots_triangles`) hold separate puzzles with only some rule types, and none
+of them appear in `all`. The paper's per-rule results (Table 8) use these configs, so `-T subset=...` reproduces them.
 
 ## Scoring
 
@@ -87,7 +110,7 @@ which is plausible because the providers and sampling settings differ from the p
 solve almost no puzzles, so these runs mainly check that prompting, answer extraction and scoring work end to
 end. We could not rerun o4-mini because our API account does not allow it.
 
-Run details: `inspect_ai` 0.3.279, task version `1-A`, 1 epoch, no generation settings changed, dataset revision
+Run details: `inspect_ai` 0.3.279, task version `1-A` (the paper's prompt wording), 1 epoch, no generation settings changed, dataset revision
 as above. Command:
 
 ```bash
@@ -97,7 +120,7 @@ inspect eval sparc --model openrouter/google/gemma-3-27b-it --max-connections 25
 ### Newer models
 
 These models are not in the paper, so there is no paper number to compare with. They were run on 2026-10-13
-with the same task, `--reasoning-effort medium` (the paper's setting for reasoning models) and
+with the same task (version `1-A`, the paper's prompt wording), `--reasoning-effort medium` (the paper's setting for reasoning models) and
 `--max-tokens 32000`. Two models were run on a 100-puzzle subset (20 per level) to stay within budget, so their
 "hard" value rests on only 20 puzzles.
 
@@ -110,6 +133,29 @@ with the same task, `--reasoning-effort medium` (the paper's setting for reasoni
 
 For comparison, humans solve 98.0% (94.5% of the hard puzzles), and o4-mini solved 15.8% in the paper. The full
 table, with all paper rows, is on the [leaderboard](https://sparc.gipplab.org/#leaderboard).
+
+## Changelog
+
+### 2-A (2026-10-22)
+
+The prompt now states three rules the way the stored solutions follow them. Thanks to @Mamiglia, who found the first
+two in the review of the Inspect Evals register entry.
+
+* **Stars.** The paper's prompt says a star pairs with exactly one other star or square of its color. In the puzzles,
+  any symbol of the same color counts, including triangles and polyshapes (the prompt's own worked example pairs a
+  green star with a green polyshape). Read literally, the old wording rules out every stored solution of 105 of the
+  500 test puzzles.
+* **Negative polyshapes (ylops).** The paper's prompt says a ylop cancels a positive polyshape of the exact same shape
+  and color. In the puzzles, ylops subtract area, as described in Section 3 of the paper, and their shape and color
+  do not have to match. All 25 test puzzles with ylops need this.
+* **Polyshapes.** The paper's prompt says the region must be able to contain the shape. In the stored solutions, the
+  shapes fill their region exactly (the region's size is always the positive area minus the ylop area, unless the
+  ylops cancel everything).
+
+Together, the star and ylop changes affect 123 of the 500 test puzzles. Results from version 1 are not comparable
+with version 2. `-T prompt=paper` gives the version 1 prompt.
+
+New task parameters: `subset`, `prompt`, `system_prompt` and `prompt_template`.
 
 ## Citation
 
