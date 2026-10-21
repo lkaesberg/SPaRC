@@ -18,6 +18,10 @@
   <a href="https://pypi.org/project/sparc-puzzle/" style="margin-left:1em; text-decoration:none; font-size:1.1em;">
     <strong>📦 PyPI Package</strong>
   </a>
+  |
+  <a href="https://towardsdatascience.com/spatial-reasoning-in-ai-models-taken-apart/" style="margin-left:1em; text-decoration:none; font-size:1.1em;">
+    <strong>📰 Article on Towards Data Science</strong>
+  </a>
 </div>
 
 ## Overview
