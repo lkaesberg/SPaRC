@@ -4,6 +4,7 @@ Prompt modules for different SPaRC solving modes.
 Available prompts:
 - single_shot: One-shot puzzle solving (default for non-gym mode)
 - single_shot_paper: The single-shot prompt as worded in the paper (star and ylop rules differ from the puzzles)
+- <name>_paper: The other prompts as worded in the papers (polyshape and ylop rules differ from the puzzles)
 - gym_step: Step-by-step gym mode without traceback
 - gym_step_traceback: Step-by-step gym mode with traceback enabled
 - gym_visual: Visual gym mode without traceback
@@ -13,22 +14,32 @@ Available prompts:
 from .single_shot import get_prompt as get_single_shot_prompt
 from .single_shot_paper import get_prompt as get_single_shot_paper_prompt
 from .single_shot_visual import get_prompt as get_single_shot_visual_prompt
+from .single_shot_visual_paper import get_prompt as get_single_shot_visual_paper_prompt
 from .single_shot_visual_prompt_engineering import get_prompt as get_single_shot_visual_prompt_engineering_prompt
 from .gym_step import get_prompt as get_gym_step_prompt
+from .gym_step_paper import get_prompt as get_gym_step_paper_prompt
 from .gym_step_traceback import get_prompt as get_gym_step_traceback_prompt
+from .gym_step_traceback_paper import get_prompt as get_gym_step_traceback_paper_prompt
 from .gym_visual import get_prompt as get_gym_visual_prompt
+from .gym_visual_paper import get_prompt as get_gym_visual_paper_prompt
 from .gym_visual_traceback import get_prompt as get_gym_visual_traceback_prompt
+from .gym_visual_traceback_paper import get_prompt as get_gym_visual_traceback_paper_prompt
 
 # Map prompt names to their functions
 PROMPT_REGISTRY = {
     "single_shot": get_single_shot_prompt,
     "single_shot_paper": get_single_shot_paper_prompt,
     "single_shot_visual": get_single_shot_visual_prompt,
+    "single_shot_visual_paper": get_single_shot_visual_paper_prompt,
     "single_shot_visual_prompt_engineering": get_single_shot_visual_prompt_engineering_prompt,
     "gym_step": get_gym_step_prompt,
+    "gym_step_paper": get_gym_step_paper_prompt,
     "gym_step_traceback": get_gym_step_traceback_prompt,
+    "gym_step_traceback_paper": get_gym_step_traceback_paper_prompt,
     "gym_visual": get_gym_visual_prompt,
+    "gym_visual_paper": get_gym_visual_paper_prompt,
     "gym_visual_traceback": get_gym_visual_traceback_prompt,
+    "gym_visual_traceback_paper": get_gym_visual_traceback_paper_prompt,
 }
 
 # All available prompt names

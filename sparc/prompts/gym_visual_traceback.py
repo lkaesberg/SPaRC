@@ -1,6 +1,9 @@
 """
 Visual gym prompt for solving puzzles with image-based representations and traceback enabled.
 Used for visual gym mode where the model can trace back along its path.
+
+The polyshape and negative polyshape rules are stated as the stored solutions follow them.
+The paper's original wording is kept in `sparc.prompts.gym_visual_traceback_paper`.
 """
 
 from typing import Dict
@@ -58,7 +61,7 @@ The image shows a Witness puzzle grid with a dark teal/green background. Here is
 - **Colored Stars**: 8-pointed star shapes in their respective color inside cells
 - **Triangles**: Small colored upward-pointing triangles inside cells — the count (1-4 triangles) indicates how many edges of that cell the path must touch
 - **Polyshapes (positive)**: Tetromino-like colored filled block patterns inside cells, showing the shape the region must match
-- **Polyshapes (negative/ylop)**: Same block patterns but drawn as hollow/outlined squares instead of filled — these cancel out positive polyshapes
+- **Polyshapes (negative/ylop)**: Same block patterns but drawn as hollow/outlined squares instead of filled — these subtract area from the positive polyshapes in their region
 
 **Path elements** (located on grid lines):
 - **Dots**: Small black hexagons on the grid lines — the path MUST pass through these
@@ -79,7 +82,7 @@ The image shows a Witness puzzle grid with a dark teal/green background. Here is
    - **Colored Stars** (8-pointed stars in cells): Each star must be paired with EXACTLY one other element of the same color in its region
    - **Triangles** (small triangles in cells): The line must touch EXACTLY the number of edges specified by the triangle count (1-4 edges)
    - **Polyshapes** (filled block patterns in cells): The region must be shaped exactly like the defined polyshape
-   - **Negative Polyshapes** (hollow block patterns in cells): Cancel out regular polyshapes if they overlap
+   - **Negative Polyshapes** (hollow block patterns in cells): Subtract area from the regular polyshapes in the same region. The region must have the area of the regular polyshapes minus the area of the negative ones; their shapes and colors do not have to match
 
 {polyshapes_str}
 

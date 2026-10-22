@@ -141,6 +141,9 @@ Since task version 2-A, the prompt states the star, polyshape and negative polys
 built. Add `-T prompt=paper` for the paper's original wording. See [sparc/README.md](sparc/README.md) for options,
 the changelog, scoring and reproduced numbers.
 
+Since version 0.7.0, the CLI's step-by-step and visual prompts use the same corrected rule wording. Each keeps its
+original wording under a `_paper` name, for example `--prompt gym_step_paper` or `--prompt single_shot_visual_paper`.
+
 ## CLI Reference
 
 ### Basic Usage

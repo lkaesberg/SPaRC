@@ -1,6 +1,9 @@
 """
 Step-by-step gym prompt for solving puzzles with traceback enabled.
 Used for gym mode where the model can trace back along its path.
+
+The polyshape and negative polyshape rules are stated as the stored solutions follow them.
+The paper's original wording is kept in `sparc.prompts.gym_step_traceback_paper`.
 """
 
 from typing import Dict
@@ -82,13 +85,12 @@ def get_prompt(puzzle_data: Dict) -> Dict:
         Squares: All squares within a single region MUST be the same color. Squares of different colors MUST be separated into different regions by the path.
         Stars: Within a single region, each star symbol MUST be paired with exactly ONE other element of the same color. Other colors within the region are irrelevant to this specific star's rule.
         
-        Polyshapes(poly): The region containing this symbol MUST be able to contain the specified shape (defined in Polyshape Definitions). The shape must fit entirely within the region's boundaries.
-        If multiple positive polyshapes are in one region, the region must accommodate their combined, non-overlapping forms. Rotation of polyshapes is generally allowed unless context implies otherwise.
+        Polyshapes(poly): The region containing this symbol MUST have exactly the specified shape (defined in Polyshape Definitions): the shape fills the whole region, with no cells left over.
+        If multiple positive polyshapes are in one region, their shapes together must fill the region exactly, without overlapping. Rotation of polyshapes is NOT allowed. They must fit in their given orientation. The color of a polyshape does not matter for this rule.
         
-        Negative Polyshapes(ylop): These subtract shape requirements, typically within the same region as corresponding positive polyshapes.
-        A negative polyshape cancels out a positive polyshape of the exact same shape and color within that region.
-        If all positive shapes are canceled, the region has no shape constraint. A negative shape is only considered 'used' if it cancels a positive one.
-        Negative shapes can sometimes rationalize apparent overlaps or boundary violations of positive shapes if interpreted as cancellations.
+        Negative Polyshapes(ylop): These subtract area from the positive polyshapes in the same region.
+        The positive shapes, minus the cells covered by the negative shapes, must fill the region exactly, so the region's size is the total size of the positive shapes minus the total size of the negative shapes.
+        A negative shape does not have to match the shape or color of any positive shape. If the negative shapes cancel the positive shapes completely, the region has no shape constraint.
 
     3.  Path-Based Rules (Edge Touching):
         Triangles: The path MUST touch a specific number of edges of the cell containing the triangle symbol.

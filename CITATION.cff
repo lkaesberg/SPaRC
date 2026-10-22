@@ -1,0 +1,45 @@
+cff-version: 1.2.0
+message: "If you use SPaRC, please cite the paper below."
+title: "SPaRC: A Spatial Pathfinding Reasoning Challenge"
+type: software
+authors:
+  - family-names: Kaesberg
+    given-names: Lars Benedikt
+  - family-names: Wahle
+    given-names: Jan Philip
+  - family-names: Ruas
+    given-names: Terry
+  - family-names: Gipp
+    given-names: Bela
+repository-code: "https://github.com/lkaesberg/SPaRC"
+url: "https://sparc.gipplab.org/"
+keywords:
+  - spatial reasoning
+  - benchmark
+  - large language models
+  - pathfinding
+preferred-citation:
+  type: conference-paper
+  title: "SPaRC: A Spatial Pathfinding Reasoning Challenge"
+  authors:
+    - family-names: Kaesberg
+      given-names: Lars Benedikt
+    - family-names: Wahle
+      given-names: Jan Philip
+    - family-names: Ruas
+      given-names: Terry
+    - family-names: Gipp
+      given-names: Bela
+  collection-title: "Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing"
+  publisher:
+    name: "Association for Computational Linguistics"
+  conference:
+    name: "EMNLP 2025"
+    city: "Suzhou"
+    country: CN
+  year: 2025
+  month: 11
+  start: 10359
+  end: 10390
+  doi: "10.18653/v1/2025.emnlp-main.526"
+  url: "https://aclanthology.org/2025.emnlp-main.526/"

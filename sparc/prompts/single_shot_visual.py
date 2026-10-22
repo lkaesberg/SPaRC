@@ -1,6 +1,9 @@
 """
 Single-shot visual prompt for solving puzzles in one attempt using image input.
 Used for non-gym visual mode where the model receives a puzzle image and returns a complete solution.
+
+The polyshape and negative polyshape rules are stated as the stored solutions follow them.
+The paper's original wording is kept in `sparc.prompts.single_shot_visual_paper`.
 """
 
 from typing import Dict
@@ -55,7 +58,7 @@ The image shows a Witness puzzle grid of size {grid_size['width']*2}x{grid_size[
 - **Colored Stars**: 8-pointed star shapes in their respective color inside cells
 - **Triangles**: Small colored upward-pointing triangles inside cells — the count (1-4 triangles) indicates how many edges of that cell the path must touch
 - **Polyshapes (positive)**: Tetromino-like colored filled block patterns inside cells, showing the shape the region must match
-- **Polyshapes (negative/ylop)**: Same block patterns but drawn as hollow/outlined squares instead of filled — these cancel out positive polyshapes
+- **Polyshapes (negative/ylop)**: Same block patterns but drawn as hollow/outlined squares instead of filled — these subtract area from the positive polyshapes in their region
 
 ## Grid & Coordinate System
 - Nodes are indexed (x, y) where (0,0) is the top-left node
@@ -75,7 +78,7 @@ The image shows a Witness puzzle grid of size {grid_size['width']*2}x{grid_size[
    - **Colored stars** (8-pointed stars in cells): Each star must be paired with EXACTLY one other element of the same color in its region. Other colors are ignored.
    - **Triangles** (small triangles in cells): The line must touch EXACTLY the number of edges specified by the count of triangles in that cell (edges are top, right, bottom, left of the cell).
    - **Polyshapes** (filled block patterns in cells): The region containing this symbol must be shaped EXACTLY like the defined polyshape.
-   - **Negative polyshapes** (hollow block patterns in cells): These cancel out regular polyshapes if they overlap.
+   - **Negative polyshapes** (hollow block patterns in cells): These subtract area from the regular polyshapes in the same region. The region must have the area of the regular polyshapes minus the area of the negative ones. Their shapes and colors do not have to match.
 
 {polyshapes_str}
 
