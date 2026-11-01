@@ -271,6 +271,8 @@ If you use the visual scaffolds, please also cite:
 | Is Visual Prompting All You Need? Studying VLM Spatial Reasoning under Progressive Visual Scaffolds | Findings of EMNLP 2026 | [arXiv:2608.21170](https://arxiv.org/abs/2608.21170) |
 | Voting or Consensus? Decision-Making in Multi-Agent Debate | Findings of ACL 2025 | [ACL Anthology](https://aclanthology.org/2025.findings-acl.606/) · [arXiv:2502.19130](https://arxiv.org/abs/2502.19130) |
 
+We also wrote two plain-language articles on Towards Data Science. [Spatial Reasoning in AI Models, Taken Apart](https://towardsdatascience.com/spatial-reasoning-in-ai-models-taken-apart/) walks through all three papers, and [Fix the Image, Not the Prompt](https://towardsdatascience.com/fix-the-image-not-the-prompt/) explains why changing the image helps vision models more than rewording the prompt.
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
