@@ -6,7 +6,7 @@ authors = [
     {name = "larskaesberg",email = "larskaesberg@gmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11.5"
 dependencies = [
     "datasets>=3.6.0",
     "openai (>=2.7.1,<4.0.0)",
@@ -46,7 +46,7 @@ readme = "README.md"
 packages = [{include = "sparc"}]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = ">=3.11.5,<4.0"
 datasets = ">=3.6.0"
 openai = ">=2.7.1,<4.0.0"
 tqdm = "^4.60.0"
